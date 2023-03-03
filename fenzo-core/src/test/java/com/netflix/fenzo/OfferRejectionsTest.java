@@ -16,7 +16,6 @@
 
 package com.netflix.fenzo;
 
-import com.netflix.fenzo.functions.Action1;
 import com.netflix.fenzo.functions.Func1;
 import org.junit.Assert;
 import org.junit.Test;
@@ -44,19 +43,13 @@ public class OfferRejectionsTest {
     ) {
         return new TaskScheduler.Builder()
                 .withLeaseRejectAction(
-                        new Action1<VirtualMachineLease>() {
-                            @Override
-                            public void call(final VirtualMachineLease virtualMachineLease) {
-                                executorService.schedule(
-                                        new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                offersQ.offer(offerGenerator.call(virtualMachineLease.hostname()));
-                                            }
-                                        },
-                                        leaseReOfferDelaySecs, TimeUnit.SECONDS);
-                            }
-                        }
+                    virtualMachineLease -> {
+                        executorService.schedule(
+                            () -> {
+                                offersQ.offer(offerGenerator.call(virtualMachineLease.hostname()));
+                            },
+                            leaseReOfferDelaySecs, TimeUnit.SECONDS);
+                    }
                 )
                 .withLeaseOfferExpirySecs(offerExpirySecs)
                 .withMaxOffersToReject(maxOffersToReject)
@@ -72,16 +65,14 @@ public class OfferRejectionsTest {
         final AtomicInteger offersGenerated = new AtomicInteger(0);
         final TaskScheduler scheduler = getScheduler(
                 offerExpirySecs, leaseReOfferDelaySecs, 4, offers,
-                new Func1<String, VirtualMachineLease>() {
-                    @Override
-                    public VirtualMachineLease call(String s) {
-                        offersGenerated.incrementAndGet();
-                        return LeaseProvider.getLeaseOffer(s, 4, 4000, 1, 10);
-                    }
-                }
+            s -> {
+                offersGenerated.incrementAndGet();
+                return LeaseProvider.getLeaseOffer(s, 4, 4000, 1, 10);
+            }
         );
-        for(int i=0; i<3; i++)
+        for (int i = 0; i < 3; i++) {
             offers.offer(LeaseProvider.getLeaseOffer("host" + i, 4, 4000, 1, 10));
+        }
         for(int i=0; i<offerExpirySecs+leaseReOfferDelaySecs+2; i++) {
             List<VirtualMachineLease> newOffers = new ArrayList<>();
             offers.drainTo(newOffers);
@@ -102,16 +93,14 @@ public class OfferRejectionsTest {
         final AtomicInteger offersGenerated = new AtomicInteger(0);
         final TaskScheduler scheduler = getScheduler(
                 offerExpirySecs, leaseReOfferDelaySecs, maxOffersToReject, offers,
-                new Func1<String, VirtualMachineLease>() {
-                    @Override
-                    public VirtualMachineLease call(String s) {
-                        offersGenerated.incrementAndGet();
-                        return LeaseProvider.getLeaseOffer(s, 4, 4000, 1, 10);
-                    }
-                }
+            s -> {
+                offersGenerated.incrementAndGet();
+                return LeaseProvider.getLeaseOffer(s, 4, 4000, 1, 10);
+            }
         );
-        for(int i=0; i<numHosts; i++)
+        for (int i = 0; i < numHosts; i++) {
             offers.offer(LeaseProvider.getLeaseOffer("host" + i, 4, 4000, 1, 10));
+        }
         for(int i=0; i<2*(offerExpirySecs+leaseReOfferDelaySecs+2); i++) {
             List<VirtualMachineLease> newOffers = new ArrayList<>();
             offers.drainTo(newOffers);
@@ -134,12 +123,9 @@ public class OfferRejectionsTest {
         final ConcurrentMap<String, String> hostsRejectedFrom = new ConcurrentHashMap<>();
         final TaskScheduler scheduler = new TaskScheduler.Builder()
                 .withLeaseRejectAction(
-                        new Action1<VirtualMachineLease>() {
-                            @Override
-                            public void call(final VirtualMachineLease virtualMachineLease) {
-                                hostsRejectedFrom.putIfAbsent(virtualMachineLease.hostname(), virtualMachineLease.hostname());
-                            }
-                        }
+                    virtualMachineLease -> {
+                        hostsRejectedFrom.putIfAbsent(virtualMachineLease.hostname(), virtualMachineLease.hostname());
+                    }
                 )
                 .withLeaseOfferExpirySecs(offerExpirySecs)
                 .withMaxOffersToReject(maxOffersToReject)
@@ -158,8 +144,9 @@ public class OfferRejectionsTest {
         // add back offer with remaining resources on first host
         leases.add(consumedLease);
         // add new offers from rest of the hosts
-        for(int i=1; i<numHosts; i++)
+        for (int i = 1; i < numHosts; i++) {
             leases.add(LeaseProvider.getLeaseOffer("host" + i, 4, 4000, 1, 10));
+        }
         for(int i=0; i<(offerExpirySecs+leaseReOfferDelaySecs); i++) {
             scheduler.scheduleOnce(Collections.<TaskRequest>emptyList(), leases);
             leases.clear();
@@ -174,11 +161,8 @@ public class OfferRejectionsTest {
     public void testExpiryOfLease() throws Exception {
         final AtomicInteger expireCount = new AtomicInteger();
         final TaskScheduler scheduler = new TaskScheduler.Builder()
-                .withLeaseRejectAction(new Action1<VirtualMachineLease>() {
-                    @Override
-                    public void call(VirtualMachineLease virtualMachineLease) {
-                        expireCount.incrementAndGet();
-                    }
+                .withLeaseRejectAction(virtualMachineLease -> {
+                    expireCount.incrementAndGet();
                 })
                 .withLeaseOfferExpirySecs(1000000)
                 .build();
@@ -198,11 +182,8 @@ public class OfferRejectionsTest {
         final AtomicInteger expireCount = new AtomicInteger();
         final int leaseExpirySecs=2;
         final TaskScheduler scheduler = new TaskScheduler.Builder()
-                .withLeaseRejectAction(new Action1<VirtualMachineLease>() {
-                    @Override
-                    public void call(VirtualMachineLease virtualMachineLease) {
-                        expireCount.incrementAndGet();
-                    }
+                .withLeaseRejectAction(virtualMachineLease -> {
+                    expireCount.incrementAndGet();
                 })
                 .withLeaseOfferExpirySecs(leaseExpirySecs)
                 .withRejectAllExpiredOffers()

@@ -19,8 +19,6 @@ package com.netflix.fenzo.samples;
 import com.netflix.fenzo.ConstraintEvaluator;
 import com.netflix.fenzo.TaskRequest;
 import com.netflix.fenzo.VMTaskFitnessCalculator;
-import com.netflix.fenzo.functions.Action1;
-import com.netflix.fenzo.functions.Func1;
 
 import java.util.Collections;
 import java.util.List;
@@ -49,13 +47,14 @@ public class TaskGenerator implements Runnable {
         this.numTasks = numTasks;
     }
 
-    private int launchedTasks = 0;
+    private int launchedTasks;
 
     @Override
     public void run() {
         for (int i = 0; i < numIters; i++) {
-            for (int j = 0; j < numTasks; j++)
+            for (int j = 0; j < numTasks; j++) {
                 taskQueue.offer(getTaskRequest(launchedTasks++));
+            }
             System.out.println("        Generated " + numTasks + " tasks so far");
             try {
                 Thread.sleep(1000);
@@ -149,26 +148,13 @@ public class TaskGenerator implements Runnable {
         BlockingQueue<TaskRequest> taskQueue = new LinkedBlockingQueue<>();
         final TaskGenerator taskGenerator = new TaskGenerator(taskQueue, numIters, numTasks);
         final SampleFramework framework = new SampleFramework(taskQueue, args[0], // mesos master location string
-                new Action1<String>() {
-                    @Override
-                    public void call(String s) {
-                        taskGenerator.tasksCompleted.incrementAndGet();
-                    }
-                },
-                new Func1<String, String>() {
-                    @Override
-                    public String call(String s) {
-                        return "sleep 2";
-                    }
-                });
+            s -> {
+                taskGenerator.tasksCompleted.incrementAndGet();
+            },
+            s -> "sleep 2");
         long start = System.currentTimeMillis();
         (new Thread(taskGenerator)).start();
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                framework.runAll();
-            }
-        }).start();
+        new Thread(framework::runAll).start();
         while(taskGenerator.tasksCompleted.get() < (numIters*numTasks)) {
             System.out.println("NUM TASKS COMPLETED: " + taskGenerator.tasksCompleted.get() + " of " + (numIters*numTasks));
             try{Thread.sleep(1000);}catch(InterruptedException ie){}
