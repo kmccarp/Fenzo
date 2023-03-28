@@ -31,7 +31,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.netflix.fenzo.functions.Action1;
-import com.netflix.fenzo.functions.Func1;
 import com.netflix.fenzo.plugins.BinPackingFitnessCalculators;
 import com.netflix.fenzo.plugins.HostAttrValueConstraint;
 import com.netflix.fenzo.queues.QAttributes;
@@ -69,18 +68,21 @@ public class AutoScalerTest {
                 .withAutoScaleByAttributeName(hostAttrName);
         for (AutoScaleRule rule : rules)
             builder.withAutoScaleRule(rule);
-        if (callback != null)
+        if (callback != null) {
             builder.withAutoScalerCallback(callback);
+        }
         return builder
                 .withDelayAutoscaleDownBySecs(delayScaleDownByDecs)
                 .withDelayAutoscaleUpBySecs(delayScaleUpBySecs)
                 .withFitnessCalculator(BinPackingFitnessCalculators.cpuMemBinPacker)
                 .withLeaseOfferExpirySecs(3600)
                 .withLeaseRejectAction(lease -> {
-                    if (leaseRejectCalback == null)
+                    if (leaseRejectCalback == null) {
                         Assert.fail("Unexpected to reject lease " + lease.hostname());
-                    else
+                    }
+                    else {
                         leaseRejectCalback.call(lease);
+                    }
                 })
                 .build();
     }
@@ -118,14 +120,11 @@ public class AutoScalerTest {
         final List<VirtualMachineLease> leases = new ArrayList<>();
         final CountDownLatch latch = new CountDownLatch(1);
         final AtomicInteger scaleUpRequest = new AtomicInteger(0);
-        scheduler.setAutoscalerCallback(new Action1<AutoScaleAction>() {
-            @Override
-            public void call(AutoScaleAction action) {
-                if (action instanceof ScaleUpAction) {
-                    int needed = ((ScaleUpAction) action).getScaleUpCount();
-                    scaleUpRequest.set(needed);
-                    latch.countDown();
-                }
+        scheduler.setAutoscalerCallback(action -> {
+            if (action instanceof ScaleUpAction) {
+                int needed = ((ScaleUpAction) action).getScaleUpCount();
+                scaleUpRequest.set(needed);
+                latch.countDown();
             }
         });
         List<TaskRequest> requests = new ArrayList<>();
@@ -134,10 +133,12 @@ public class AutoScalerTest {
             Thread.sleep(1000);
             scheduler.scheduleOnce(requests, leases);
         } while (i++ < (coolDownSecs + 2) && latch.getCount() > 0);
-        if (latch.getCount() > 0)
+        if (latch.getCount() > 0) {
             Assert.fail("Timed out scale up action");
-        else
+        }
+        else {
             Assert.assertEquals(maxIdle, scaleUpRequest.get());
+        }
     }
 
     // Test scale up action repeating after using up all hosts after first scale up action
@@ -155,16 +156,14 @@ public class AutoScalerTest {
         final CountDownLatch latch = new CountDownLatch(1);
         final AtomicBoolean addVMs = new AtomicBoolean(false);
         final List<TaskRequest> requests = new ArrayList<>();
-        for (int i = 0; i < maxIdle * cpus1; i++)
+        for (int i = 0; i < maxIdle * cpus1; i++) {
             requests.add(TaskRequestProvider.getTaskRequest(1.0, 100, 1));
-        scheduler.setAutoscalerCallback(new Action1<AutoScaleAction>() {
-            @Override
-            public void call(AutoScaleAction action) {
-                if (action instanceof ScaleUpAction) {
-                    if (!addVMs.compareAndSet(false, true)) {
-                        // second time around here
-                        latch.countDown();
-                    }
+        }
+        scheduler.setAutoscalerCallback(action -> {
+            if (action instanceof ScaleUpAction) {
+                if (!addVMs.compareAndSet(false, true)) {
+                    // second time around here
+                    latch.countDown();
                 }
             }
         });
@@ -200,21 +199,24 @@ public class AutoScalerTest {
         final CountDownLatch latch = new CountDownLatch(1);
         TaskScheduler scheduler = getScheduler(null, action -> {
             if (action instanceof ScaleUpAction) {
-                if (action.getRuleName().equals(rule1.getRuleName()))
+                if (action.getRuleName().equals(rule1.getRuleName())) {
                     latch.countDown();
+                }
             }
         }, rule2);
         final List<TaskRequest> requests = new ArrayList<>();
         final List<VirtualMachineLease> leases = new ArrayList<>();
-        for (int i = 0; i < maxIdle * cpus1; i++)
+        for (int i = 0; i < maxIdle * cpus1; i++) {
             requests.add(TaskRequestProvider.getTaskRequest(1.0, 100, 1));
+        }
         int i = 0;
         do {
             Thread.sleep(1000);
             scheduler.scheduleOnce(requests, leases);
         } while (i++ < coolDownSecs + 2 && latch.getCount() > 0);
-        if (latch.getCount() < 1)
+        if (latch.getCount() < 1) {
             Assert.fail("Should not have gotten scale up action for " + rule1.getRuleName());
+        }
     }
 
     /**
@@ -228,12 +230,10 @@ public class AutoScalerTest {
         final List<TaskRequest> requests = new ArrayList<>();
         final List<VirtualMachineLease> leases = new ArrayList<>();
         final CountDownLatch latch = new CountDownLatch(1);
-        scheduler.setAutoscalerCallback(new Action1<AutoScaleAction>() {
-            @Override
-            public void call(AutoScaleAction action) {
-                if (action instanceof ScaleUpAction) {
-                    if (action.getRuleName().equals(rule2.getRuleName()))
-                        latch.countDown();
+        scheduler.setAutoscalerCallback(action -> {
+            if (action instanceof ScaleUpAction) {
+                if (action.getRuleName().equals(rule2.getRuleName())) {
+                    latch.countDown();
                 }
             }
         });
@@ -253,9 +253,10 @@ public class AutoScalerTest {
             scheduler.scheduleOnce(requests, leases);
             leases.clear();
         } while (i++ < coolDownSecs + 2 && latch.getCount() > 0);
-        if (latch.getCount() < 1)
+        if (latch.getCount() < 1) {
             Assert.fail("Scale up action received for " + rule2.getRuleName() + " rule, was expecting only on "
-                    + rule1.getRuleName());
+                + rule1.getRuleName());
+        }
     }
 
     /**
@@ -268,17 +269,15 @@ public class AutoScalerTest {
         final AtomicInteger scaleDownCount = new AtomicInteger();
         TaskScheduler scheduler = getScheduler(noOpLeaseReject, rule1);
         final List<TaskRequest> requests = new ArrayList<>();
-        for (int c = 0; c < cpus1; c++) // add as many 1-CPU requests as #cores on a host
+        for (int c = 0; c < cpus1; c++) { // add as many 1-CPU requests as #cores on a host
             requests.add(TaskRequestProvider.getTaskRequest(1, 1000, 1));
+        }
         final List<VirtualMachineLease> leases = new ArrayList<>();
         final CountDownLatch latch = new CountDownLatch(1);
-        scheduler.setAutoscalerCallback(new Action1<AutoScaleAction>() {
-            @Override
-            public void call(AutoScaleAction action) {
-                if (action instanceof ScaleDownAction) {
-                    scaleDownCount.set(((ScaleDownAction) action).getHosts().size());
-                    latch.countDown();
-                }
+        scheduler.setAutoscalerCallback(action -> {
+            if (action instanceof ScaleDownAction) {
+                scaleDownCount.set(((ScaleDownAction) action).getHosts().size());
+                latch.countDown();
             }
         });
         List<VirtualMachineLease.Range> ports = new ArrayList<>();
@@ -320,18 +319,17 @@ public class AutoScalerTest {
         final List<VirtualMachineLease> leases = new ArrayList<>();
         final CountDownLatch latch = new CountDownLatch(1);
         final String wrongScaleDownRulename = rule1.getRuleName();
-        scheduler.setAutoscalerCallback(new Action1<AutoScaleAction>() {
-            @Override
-            public void call(AutoScaleAction action) {
-                if (action instanceof ScaleDownAction) {
-                    if (action.getRuleName().equals(wrongScaleDownRulename))
-                        latch.countDown();
+        scheduler.setAutoscalerCallback(action -> {
+            if (action instanceof ScaleDownAction) {
+                if (action.getRuleName().equals(wrongScaleDownRulename)) {
+                    latch.countDown();
                 }
             }
         });
         // use up servers covered by rule1
-        for (int r = 0; r < maxIdle * cpus1; r++)
+        for (int r = 0; r < maxIdle * cpus1; r++) {
             requests.add(TaskRequestProvider.getTaskRequest(1, memory1 / cpus1, 1));
+        }
         List<VirtualMachineLease.Range> ports = new ArrayList<>();
         ports.add(new VirtualMachineLease.Range(1, 10));
         Map<String, Protos.Attribute> attributes1 = new HashMap<>();
@@ -359,9 +357,10 @@ public class AutoScalerTest {
                 leases.clear();
             }
         } while (i++ < coolDownSecs + 2 && latch.getCount() > 0);
-        if (latch.getCount() < 1)
+        if (latch.getCount() < 1) {
             Assert.fail("Scale down action received for " + wrongScaleDownRulename + " rule, was expecting only on "
-                    + rule1.getRuleName());
+                + rule1.getRuleName());
+        }
     }
 
     // Tests that when scaling down, a balance is achieved across hosts for the given attribute. That is, about equal
@@ -388,27 +387,23 @@ public class AutoScalerTest {
                 .withAutoScaleDownBalancedByAttributeName(zoneAttrName)
                 .withFitnessCalculator(BinPackingFitnessCalculators.cpuBinPacker)
                 .withLeaseOfferExpirySecs(3600)
-                .withLeaseRejectAction(new Action1<VirtualMachineLease>() {
-                    @Override
-                    public void call(VirtualMachineLease lease) {
-                        //System.out.println("Rejecting lease on " + lease.hostname());
-                    }
+                .withLeaseRejectAction(lease -> {
+                    //System.out.println("Rejecting lease on " + lease.hostname());
                 })
                 .withAutoScaleRule(rule)
                 .build();
-        scheduler.setAutoscalerCallback(new Action1<AutoScaleAction>() {
-            @Override
-            public void call(AutoScaleAction action) {
-                if (action.getType() == AutoScaleAction.Type.Down) {
-                    final Collection<String> hosts = ((ScaleDownAction) action).getHosts();
-                    for (String h : hosts) {
-                        int zoneNum = Integer.parseInt(h.substring("host".length())) % 3;
-                        //System.out.println("Scaling down host " + h);
-                        zoneCounts[zoneNum]--;
-                    }
-                    latch.countDown();
-                } else
-                    Assert.fail("Wasn't expecting to scale up");
+        scheduler.setAutoscalerCallback(action -> {
+            if (action.getType() == AutoScaleAction.Type.Down) {
+                final Collection<String> hosts = ((ScaleDownAction) action).getHosts();
+                for (String h: hosts) {
+                    int zoneNum = Integer.parseInt(h.substring("host".length())) % 3;
+                    //System.out.println("Scaling down host " + h);
+                    zoneCounts[zoneNum]--;
+                }
+                latch.countDown();
+            }
+            else {
+                Assert.fail("Wasn't expecting to scale up");
             }
         });
         List<VirtualMachineLease.Range> ports = new ArrayList<>();
@@ -419,7 +414,7 @@ public class AutoScalerTest {
                 .setType(Protos.Value.Type.TEXT)
                 .setText(Protos.Value.Text.newBuilder().setValue(hostAttrVal1)).build();
         for (int i = 0; i < 3; i++) {
-            attributes.add(new HashMap<String, Protos.Attribute>());
+            attributes.add(new HashMap<>());
             Protos.Attribute attribute = Protos.Attribute.newBuilder().setName(zoneAttrName)
                     .setType(Protos.Value.Type.TEXT)
                     .setText(Protos.Value.Text.newBuilder().setValue("" + i)).build();
@@ -450,8 +445,9 @@ public class AutoScalerTest {
                 leases.clear();
             }
         } while (i++ < coolDownSecs + 2 && latch.getCount() > 0);
-        if (latch.getCount() > 0)
+        if (latch.getCount() > 0) {
             Assert.fail("Didn't get scale down");
+        }
         for (int zoneCount : zoneCounts) {
             Assert.assertEquals(4, zoneCount);
         }
@@ -469,8 +465,9 @@ public class AutoScalerTest {
         final AtomicReference<Collection<String>> scaleDownHostsRef = new AtomicReference<>();
         final List<TaskRequest> requests = new ArrayList<>();
         final List<VirtualMachineLease> leases = new ArrayList<>();
-        for (int j = 0; j < cpus1; j++) // fill one machine
+        for (int j = 0; j < cpus1; j++) { // fill one machine
             requests.add(TaskRequestProvider.getTaskRequest(1, memory1 / cpus1, 1));
+        }
         List<VirtualMachineLease.Range> ports = new ArrayList<>();
         ports.add(new VirtualMachineLease.Range(1, 10));
         Map<String, Protos.Attribute> attributes1 = new HashMap<>();
@@ -482,13 +479,10 @@ public class AutoScalerTest {
         for (int l = 0; l < maxIdle + excess; l++) {
             leases.add(LeaseProvider.getLeaseOffer("host" + l, cpus1, memory1, ports, attributes1));
         }
-        scheduler.setAutoscalerCallback(new Action1<AutoScaleAction>() {
-            @Override
-            public void call(AutoScaleAction action) {
-                if (action instanceof ScaleDownAction) {
-                    scaleDownHostsRef.set(((ScaleDownAction) action).getHosts());
-                    latch.countDown();
-                }
+        scheduler.setAutoscalerCallback(action -> {
+            if (action instanceof ScaleDownAction) {
+                scaleDownHostsRef.set(((ScaleDownAction) action).getHosts());
+                latch.countDown();
             }
         });
         int i = 0;
@@ -506,9 +500,10 @@ public class AutoScalerTest {
         final List<VirtualMachineCurrentState> vmCurrentStates = scheduler.getVmCurrentStates();
         long now = System.currentTimeMillis();
         for (VirtualMachineCurrentState s : vmCurrentStates) {
-            if (s.getDisabledUntil() > 0)
+            if (s.getDisabledUntil() > 0) {
                 System.out.println("********** " + s.getHostname() + " disabled for " + (s.getDisabledUntil() - now) +
-                        " mSecs");
+                    " mSecs");
+            }
         }
         // remove any existing leases in scheduler
         // now generate offers for hosts that were scale down and ensure they don't get used
@@ -516,8 +511,9 @@ public class AutoScalerTest {
             leases.add(LeaseProvider.getLeaseOffer(hostname, cpus1, memory1, ports, attributes1));
         }
         // now try to fill all machines minus one that we filled before
-        for (int j = 0; j < (maxIdle + excess - 1) * cpus1; j++)
+        for (int j = 0; j < (maxIdle + excess - 1) * cpus1; j++) {
             requests.add(TaskRequestProvider.getTaskRequest(1, memory1 / cpus1, 1));
+        }
         i = 0;
         first = true;
         do {
@@ -526,8 +522,9 @@ public class AutoScalerTest {
                 for (Map.Entry<String, VMAssignmentResult> entry : schedulingResult.getResultMap().entrySet()) {
                     Assert.assertFalse("Did not expect scaled down host " + entry.getKey() + " to be assigned again",
                             isInCollection(entry.getKey(), scaleDownHostsRef.get()));
-                    for (int j = 0; j < entry.getValue().getTasksAssigned().size(); j++)
+                    for (int j = 0; j < entry.getValue().getTasksAssigned().size(); j++) {
                         requests.remove(0);
+                    }
                 }
             }
             if (first) {
@@ -545,24 +542,22 @@ public class AutoScalerTest {
         TaskScheduler scheduler = getScheduler(noOpLeaseReject, AutoScaleRuleProvider.createRule(hostAttrVal1, minIdle, maxIdle, coolDownSecs, 1, 1000));
         final List<TaskRequest> requests = new ArrayList<>();
         final List<VirtualMachineLease> leases = new ArrayList<>();
-        for (int i = 0; i < rule1.getMaxIdleHostsToKeep() * 2; i++)
+        for (int i = 0; i < rule1.getMaxIdleHostsToKeep() * 2; i++) {
             requests.add(TaskRequestProvider.getTaskRequest(1, 1000, 1));
+        }
         leases.addAll(LeaseProvider.getLeases(2, 1, 1000, 1, 10));
         final AtomicInteger scaleUpRequested = new AtomicInteger();
         final AtomicReference<CountDownLatch> latchRef = new AtomicReference<>(new CountDownLatch(1));
-        scheduler.setAutoscalerCallback(new Action1<AutoScaleAction>() {
-            @Override
-            public void call(AutoScaleAction action) {
-                if (action instanceof ScaleUpAction) {
-                    scaleUpRequested.set(((ScaleUpAction) action).getScaleUpCount());
-                    latchRef.get().countDown();
-                }
+        scheduler.setAutoscalerCallback(action -> {
+            if (action instanceof ScaleUpAction) {
+                scaleUpRequested.set(((ScaleUpAction) action).getScaleUpCount());
+                latchRef.get().countDown();
             }
         });
         SchedulingResult schedulingResult = scheduler.scheduleOnce(requests.subList(0, leases.size()), leases);
         Assert.assertNotNull(schedulingResult);
         Thread.sleep(coolDownSecs * 1000 + 1000);
-        schedulingResult = scheduler.scheduleOnce(requests.subList(leases.size(), requests.size()), new ArrayList<VirtualMachineLease>());
+        schedulingResult = scheduler.scheduleOnce(requests.subList(leases.size(), requests.size()), new ArrayList<>());
         Assert.assertNotNull(schedulingResult);
         boolean waitSuccessful = latchRef.get().await(coolDownSecs, TimeUnit.SECONDS);
         Assert.assertTrue(waitSuccessful);
@@ -570,10 +565,11 @@ public class AutoScalerTest {
         Assert.assertEquals(requests.size() - leases.size(), scaleUp);
         requests.clear();
         final int newRequests = rule1.getMaxIdleHostsToKeep() * 3;
-        for (int i = 0; i < newRequests; i++)
+        for (int i = 0; i < newRequests; i++) {
             requests.add(TaskRequestProvider.getTaskRequest(1, 1000, 1));
+        }
         latchRef.set(new CountDownLatch(1));
-        schedulingResult = scheduler.scheduleOnce(requests, new ArrayList<VirtualMachineLease>());
+        schedulingResult = scheduler.scheduleOnce(requests, new ArrayList<>());
         Assert.assertNotNull(schedulingResult);
         waitSuccessful = latchRef.get().await(coolDownSecs, TimeUnit.SECONDS);
         Assert.assertTrue(waitSuccessful);
@@ -603,33 +599,25 @@ public class AutoScalerTest {
         }
         // fill the big hosts, there's no autoscale rule for it
         // make small tasks sticky on small hosts with a constraint
-        ConstraintEvaluator attrConstraint = new HostAttrValueConstraint(hostAttrName, new Func1<String, String>() {
-            @Override
-            public String call(String s) {
-                return hostAttrVal1;
-            }
-        });
+        ConstraintEvaluator attrConstraint = new HostAttrValueConstraint(hostAttrName, s -> hostAttrVal1);
         for (int h = 0; h < leases.size() / 2; h++) {
             requests.add(TaskRequestProvider.getTaskRequest(6.0, 100, 1));
             requests.add(TaskRequestProvider.getTaskRequest(1.0, 10, 1, Collections.singletonList(attrConstraint), null));
         }
         final CountDownLatch latchSmallHosts = new CountDownLatch(1);
         final AtomicReference<Integer> hostsToAdd = new AtomicReference<>(0);
-        scheduler.setAutoscalerCallback(new Action1<AutoScaleAction>() {
-            @Override
-            public void call(AutoScaleAction action) {
-                switch (action.getRuleName()) {
-                    case hostAttrVal1:
-                        System.out.println("Got scale up for small hosts " + System.currentTimeMillis());
-                        hostsToAdd.set(((ScaleUpAction) action).getScaleUpCount());
-                        latchSmallHosts.countDown();
-                        break;
-                    case hostAttrVal2:
-                        Assert.fail("Wasn't expecting scale action for big hosts");
-                        break;
-                    default:
-                        Assert.fail("Unexpected scale action rule name " + action.getRuleName());
-                }
+        scheduler.setAutoscalerCallback(action -> {
+            switch (action.getRuleName()) {
+                case hostAttrVal1:
+                    System.out.println("Got scale up for small hosts " + System.currentTimeMillis());
+                    hostsToAdd.set(((ScaleUpAction) action).getScaleUpCount());
+                    latchSmallHosts.countDown();
+                    break;
+                case hostAttrVal2:
+                    Assert.fail("Wasn't expecting scale action for big hosts");
+                    break;
+                default:
+                    Assert.fail("Unexpected scale action rule name " + action.getRuleName());
             }
         });
         for (int i = 0; i < coolDownSecs + 2; i++) {
@@ -661,27 +649,26 @@ public class AutoScalerTest {
             }
             Thread.sleep(1000);
         }
-        if (!latchSmallHosts.await(5, TimeUnit.SECONDS))
+        if (!latchSmallHosts.await(5, TimeUnit.SECONDS)) {
             Assert.fail("Small hosts scale up not triggered");
+        }
         Assert.assertTrue("Small hosts to add>0", hostsToAdd.get() > 0);
-        for (int i = 0; i < hostsToAdd.get(); i++)
+        for (int i = 0; i < hostsToAdd.get(); i++) {
             leases.add(LeaseProvider.getLeaseOffer("smallhost" + 100 + i, cpus1, memory1, ports, attributes1));
+        }
         final CountDownLatch latchBigHosts = new CountDownLatch(1);
         scheduler.addOrReplaceAutoScaleRule(AutoScaleRuleProvider.createRule(hostAttrVal2, minIdle, maxIdle, coolDownSecs, 1, 1000));
-        scheduler.setAutoscalerCallback(new Action1<AutoScaleAction>() {
-            @Override
-            public void call(AutoScaleAction action) {
-                switch (action.getRuleName()) {
-                    case hostAttrVal1:
-                        Assert.fail("Wasn't expecting scale action on " + hostAttrVal1);
-                        break;
-                    case hostAttrVal2:
-                        System.out.println("Got scale up for big hosts " + System.currentTimeMillis());
-                        latchBigHosts.countDown();
-                        break;
-                    default:
-                        Assert.fail("Unknown scale action rule name: " + action.getRuleName());
-                }
+        scheduler.setAutoscalerCallback(action -> {
+            switch (action.getRuleName()) {
+                case hostAttrVal1:
+                    Assert.fail("Wasn't expecting scale action on " + hostAttrVal1);
+                    break;
+                case hostAttrVal2:
+                    System.out.println("Got scale up for big hosts " + System.currentTimeMillis());
+                    latchBigHosts.countDown();
+                    break;
+                default:
+                    Assert.fail("Unknown scale action rule name: " + action.getRuleName());
             }
         });
         for (int i = 0; i < coolDownSecs + 2; i++) {
@@ -691,8 +678,9 @@ public class AutoScalerTest {
             }
             Thread.sleep(1000);
         }
-        if (!latchBigHosts.await(5, TimeUnit.SECONDS))
+        if (!latchBigHosts.await(5, TimeUnit.SECONDS)) {
             Assert.fail("Big hosts scale up not triggered");
+        }
     }
 
     @Test
@@ -715,13 +703,10 @@ public class AutoScalerTest {
         }
         final CountDownLatch latch = new CountDownLatch(1);
         final AtomicBoolean keepGoing = new AtomicBoolean(true);
-        scheduler.setAutoscalerCallback(new Action1<AutoScaleAction>() {
-            @Override
-            public void call(AutoScaleAction action) {
-                if (action.getType() == AutoScaleAction.Type.Up) {
-                    latch.countDown();
-                    keepGoing.set(false);
-                }
+        scheduler.setAutoscalerCallback(action -> {
+            if (action.getType() == AutoScaleAction.Type.Up) {
+                latch.countDown();
+                keepGoing.set(false);
             }
         });
         for (int i = 0; i < coolDownSecs + 2 && keepGoing.get(); i++) {
@@ -743,23 +728,19 @@ public class AutoScalerTest {
             }
             Thread.sleep(1000);
         }
-        if (!latch.await(2, TimeUnit.SECONDS))
+        if (!latch.await(2, TimeUnit.SECONDS)) {
             Assert.fail("Didn't get scale up action");
+        }
         scheduler.removeAutoScaleRule(hostAttrVal1);
         scheduler.addOrReplaceAutoScaleRule(AutoScaleRuleProvider.createRule(hostAttrVal2, minIdle, maxIdle, coolDownSecs, 1, 1000));
         final AtomicBoolean gotHost2scaleup = new AtomicBoolean(false);
-        scheduler.setAutoscalerCallback(new Action1<AutoScaleAction>() {
-            @Override
-            public void call(AutoScaleAction action) {
-                if (action.getType() == AutoScaleAction.Type.Up) {
-                    switch (action.getRuleName()) {
-                        case hostAttrVal1:
-                            Assert.fail("Shouldn't have gotten autoscale action");
-                            break;
-                        case hostAttrVal2:
-                            gotHost2scaleup.set(true);
-                            break;
-                    }
+        scheduler.setAutoscalerCallback(action -> {
+            if (action.getType() == AutoScaleAction.Type.Up) {
+                if (hostAttrVal1.equals(action.getRuleName())) {
+                    Assert.fail("Shouldn't have gotten autoscale action");
+                }
+                else if (hostAttrVal2.equals(action.getRuleName())) {
+                    gotHost2scaleup.set(true);
                 }
             }
         });
@@ -772,8 +753,9 @@ public class AutoScalerTest {
 
     private boolean isInCollection(String host, Collection<String> hostList) {
         for (String h : hostList)
-            if (h.equals(host))
+            if (h.equals(host)) {
                 return true;
+            }
         return false;
     }
 
@@ -789,20 +771,15 @@ public class AutoScalerTest {
         testScaleUpDelay(2);
     }
 
-    private void testScaleUpDelay(int N) throws Exception {
+    private void testScaleUpDelay(int n) throws Exception {
         final AtomicBoolean scaleUpReceived = new AtomicBoolean();
         final AtomicBoolean scaleDownReceived = new AtomicBoolean();
-        final Action1<AutoScaleAction> callback = new Action1<AutoScaleAction>() {
-            @Override
-            public void call(AutoScaleAction autoScaleAction) {
-                switch (autoScaleAction.getType()) {
-                    case Down:
-                        scaleDownReceived.set(true);
-                        break;
-                    case Up:
-                        scaleUpReceived.set(true);
-                        break;
-                }
+        final Action1<AutoScaleAction> callback = autoScaleAction -> {
+            if (autoScaleAction.getType() == AutoScaleAction.Type.Down) {
+                scaleDownReceived.set(true);
+            }
+            else if (autoScaleAction.getType() == AutoScaleAction.Type.Up) {
+                scaleUpReceived.set(true);
             }
         };
         long scaleupDelaySecs = 2L;
@@ -815,19 +792,22 @@ public class AutoScalerTest {
                 .setText(Protos.Value.Text.newBuilder().setValue(hostAttrVal1)).build();
         attributes.put(hostAttrName, attribute);
         final List<VirtualMachineLease> leases = new ArrayList<>();
-        for (int l = 0; l < minIdle; l++)
+        for (int l = 0; l < minIdle; l++) {
             leases.add(LeaseProvider.getLeaseOffer("host" + l, cpus1, memory1, ports, attributes));
+        }
         for (int i = 0; i < coolDownSecs + 1; i++) {
-            if (i > 0)
+            if (i > 0) {
                 leases.clear();
+            }
             final SchedulingResult result = scheduler.scheduleOnce(Collections.<TaskRequest>emptyList(), leases);
             Thread.sleep(1000);
         }
         Assert.assertFalse("Unexpected to scale DOWN", scaleDownReceived.get());
         Assert.assertFalse("Unexpected to scale UP", scaleUpReceived.get());
-        for (int o = 0; o < N; o++) {
-            if (o == 1)
-                Thread.sleep((long) (2.5 * scaleupDelaySecs) * 1000L); // delay next round by a while to reset previous delay
+        for (int o = 0; o < n; o++) {
+            if (o == 1) {
+                Thread.sleep((long) (2.5 * scaleupDelaySecs) * 1000L);
+            } // delay next round by a while to reset previous delay
             for (int i = 0; i < scaleupDelaySecs + 2; i++) {
                 List<TaskRequest> tasks = new ArrayList<>();
                 if (i == 0) {
@@ -838,8 +818,10 @@ public class AutoScalerTest {
                 if (!tasks.isEmpty()) {
                     Assert.assertTrue(resultMap.size() == 1);
                     leases.add(LeaseProvider.getConsumedLease(resultMap.values().iterator().next()));
-                } else
+                }
+                else {
                     leases.clear();
+                }
                 Thread.sleep(1000);
             }
             Assert.assertFalse("Unexpected to scale DOWN", scaleDownReceived.get());
@@ -866,17 +848,12 @@ public class AutoScalerTest {
     private void testScaleDownDelay(int N) throws Exception {
         final AtomicBoolean scaleUpReceived = new AtomicBoolean();
         final AtomicBoolean scaleDownReceived = new AtomicBoolean();
-        final Action1<AutoScaleAction> callback = new Action1<AutoScaleAction>() {
-            @Override
-            public void call(AutoScaleAction autoScaleAction) {
-                switch (autoScaleAction.getType()) {
-                    case Down:
-                        scaleDownReceived.set(true);
-                        break;
-                    case Up:
-                        scaleUpReceived.set(true);
-                        break;
-                }
+        final Action1<AutoScaleAction> callback = autoScaleAction -> {
+            if (autoScaleAction.getType() == AutoScaleAction.Type.Down) {
+                scaleDownReceived.set(true);
+            }
+            else if (autoScaleAction.getType() == AutoScaleAction.Type.Up) {
+                scaleUpReceived.set(true);
             }
         };
         long scaleDownDelay = 3;
@@ -889,11 +866,13 @@ public class AutoScalerTest {
                 .setText(Protos.Value.Text.newBuilder().setValue(hostAttrVal1)).build();
         attributes.put(hostAttrName, attribute);
         final List<VirtualMachineLease> leases = new ArrayList<>();
-        for (int l = 0; l < maxIdle + 2; l++)
+        for (int l = 0; l < maxIdle + 2; l++) {
             leases.add(LeaseProvider.getLeaseOffer("host" + l, cpus1, memory1, ports, attributes));
+        }
         List<TaskRequest> tasks = new ArrayList<>();
-        for (int t = 0; t < 2; t++)
+        for (int t = 0; t < 2; t++) {
             tasks.add(TaskRequestProvider.getTaskRequest(cpus1, memory1, 1));
+        }
         final SchedulingResult result = scheduler.scheduleOnce(tasks, leases);
         final Map<String, VMAssignmentResult> resultMap = result.getResultMap();
         Assert.assertEquals(tasks.size(), resultMap.size());
@@ -905,8 +884,9 @@ public class AutoScalerTest {
         // run scheduler for (scaleDownDelay-1) secs and ensure we didn't get scale down request
         for (int i = 0; i < scaleDownDelay - 1; i++) {
             scheduler.scheduleOnce(tasks, leases);
-            if (i == 0)
+            if (i == 0) {
                 leases.clear();
+            }
             Thread.sleep(1000);
         }
         Assert.assertFalse("Scale down not expected", scaleDownReceived.get());
@@ -915,8 +895,10 @@ public class AutoScalerTest {
             if (o == 1) {
                 Thread.sleep((long) (2.5 * scaleDownDelay) * 1000L);
                 leases.add(LeaseProvider.getLeaseOffer("hostFoo", cpus1, memory1, ports, attributes));
-            } else
+            }
+            else {
                 tasks.add(TaskRequestProvider.getTaskRequest(cpus1, memory1, 1));
+            }
             for (int i = 0; i < scaleDownDelay + 1; i++) {
                 final SchedulingResult result1 = scheduler.scheduleOnce(tasks, leases);
                 leases.clear();
@@ -930,8 +912,9 @@ public class AutoScalerTest {
             Assert.assertFalse("Scale up not expected", scaleUpReceived.get());
         }
         // ensure normal scale down request happens after the delay
-        for (int l = 0; l < N; l++)
+        for (int l = 0; l < N; l++) {
             leases.add(LeaseProvider.getLeaseOffer("host" + (100 + l), cpus1, memory1, ports, attributes));
+        }
         SchedulingResult result1 = scheduler.scheduleOnce(Collections.<TaskRequest>emptyList(), leases);
         leases.clear();
         Thread.sleep(1000);
@@ -954,8 +937,9 @@ public class AutoScalerTest {
         ports.add(new VirtualMachineLease.Range(1, 10));
         attributes.put(hostAttrName, attribute);
         final List<VirtualMachineLease> leases = new ArrayList<>();
-        for (int l = 0; l < minSize + extra; l++)
+        for (int l = 0; l < minSize + extra; l++) {
             leases.add(LeaseProvider.getLeaseOffer("host" + l, 4, 4000, ports, attributes));
+        }
         AtomicInteger scaleDown = new AtomicInteger();
         Action1<AutoScaleAction> callback = autoScaleAction -> {
             if (autoScaleAction instanceof ScaleDownAction) {
@@ -985,8 +969,9 @@ public class AutoScalerTest {
         ports.add(new VirtualMachineLease.Range(1, 10));
         attributes.put(hostAttrName, attribute);
         final List<VirtualMachineLease> leases = new ArrayList<>();
-        for (int l = 0; l < minSize - 2; l++)
+        for (int l = 0; l < minSize - 2; l++) {
             leases.add(LeaseProvider.getLeaseOffer("host" + l, 4, 4000, ports, attributes));
+        }
         AtomicInteger scaleDown = new AtomicInteger();
         Action1<AutoScaleAction> callback = autoScaleAction -> {
             if (autoScaleAction instanceof ScaleDownAction) {
@@ -1017,8 +1002,9 @@ public class AutoScalerTest {
         ports.add(new VirtualMachineLease.Range(1, 10));
         attributes.put(hostAttrName, attribute);
         final List<VirtualMachineLease> leases = new ArrayList<>();
-        for (int l = 0; l < maxSize - leaveIdle; l++)
+        for (int l = 0; l < maxSize - leaveIdle; l++) {
             leases.add(LeaseProvider.getLeaseOffer("host" + l, 4, 4000, ports, attributes));
+        }
         AtomicInteger scaleUp = new AtomicInteger();
         Action1<AutoScaleAction> callback = autoScaleAction -> {
             if (autoScaleAction instanceof ScaleUpAction) {
@@ -1029,8 +1015,9 @@ public class AutoScalerTest {
         final TaskScheduler scheduler = getScheduler(noOpLeaseReject, callback, rule);
         // create enough tasks to fill up the Vms
         List<TaskRequest> tasks = new ArrayList<>();
-        for (int l = 0; l < maxSize - leaveIdle; l++)
+        for (int l = 0; l < maxSize - leaveIdle; l++) {
             tasks.add(TaskRequestProvider.getTaskRequest(4, 4000, 1));
+        }
         boolean first = true;
         for (int i = 0; i < cooldown + 1; i++) {
             final SchedulingResult result = scheduler.scheduleOnce(tasks, leases);
@@ -1067,8 +1054,9 @@ public class AutoScalerTest {
         ports.add(new VirtualMachineLease.Range(1, 10));
         attributes.put(hostAttrName, attribute);
         final List<VirtualMachineLease> leases = new ArrayList<>();
-        for (int l = 0; l < maxSize + 2; l++)
+        for (int l = 0; l < maxSize + 2; l++) {
             leases.add(LeaseProvider.getLeaseOffer("host" + l, 4, 4000, ports, attributes));
+        }
         AtomicInteger scaleUp = new AtomicInteger();
         Action1<AutoScaleAction> callback = autoScaleAction -> {
             if (autoScaleAction instanceof ScaleUpAction) {
@@ -1079,8 +1067,9 @@ public class AutoScalerTest {
         final TaskScheduler scheduler = getScheduler(noOpLeaseReject, callback, rule);
         // create enough tasks to fill up the Vms
         List<TaskRequest> tasks = new ArrayList<>();
-        for (int l = 0; l < maxSize + 2; l++)
+        for (int l = 0; l < maxSize + 2; l++) {
             tasks.add(TaskRequestProvider.getTaskRequest(4, 4000, 1));
+        }
         boolean first = true;
         for (int i = 0; i < cooldown + 1; i++) {
             final SchedulingResult result = scheduler.scheduleOnce(tasks, leases);
@@ -1124,8 +1113,9 @@ public class AutoScalerTest {
                 .setText(Protos.Value.Text.newBuilder().setValue("cluster2")).build();
         attributes2.put(hostAttrName, attribute1);
         final List<VirtualMachineLease> leases = new ArrayList<>();
-        for (int l = 0; l < minIdle; l++)
+        for (int l = 0; l < minIdle; l++) {
             leases.add(LeaseProvider.getLeaseOffer("host" + l, cpus1, memory1, ports, attributes1));
+        }
         final Map<String, Integer> scaleUpRequests = new HashMap<>();
         final CountDownLatch initialScaleUpLatch = new CountDownLatch(2);
         final AtomicReference<CountDownLatch> scaleUpLatchRef = new AtomicReference<>();
@@ -1135,8 +1125,9 @@ public class AutoScalerTest {
                 System.out.println("**************** scale up by " + action.getScaleUpCount());
                 scaleUpRequests.putIfAbsent(action.getRuleName(), 0);
                 scaleUpRequests.put(action.getRuleName(), scaleUpRequests.get(action.getRuleName()) + action.getScaleUpCount());
-                if (scaleUpLatchRef.get() != null)
+                if (scaleUpLatchRef.get() != null) {
                     scaleUpLatchRef.get().countDown();
+                }
             }
         };
         scaleUpLatchRef.set(initialScaleUpLatch);
@@ -1152,8 +1143,9 @@ public class AutoScalerTest {
                 .withTaskScheduler(scheduler)
                 .withSchedulingResultCallback(schedulingResult -> {
                     final List<Exception> elist = schedulingResult.getExceptions();
-                    if (elist != null && !elist.isEmpty())
+                    if (elist != null && !elist.isEmpty()) {
                         exceptions.set(elist);
+                    }
                     final Map<String, VMAssignmentResult> resultMap = schedulingResult.getResultMap();
                     if (resultMap != null && !resultMap.isEmpty()) {
                         for (VMAssignmentResult vmar : resultMap.values()) {
@@ -1165,18 +1157,21 @@ public class AutoScalerTest {
         schedulingService.setTaskToClusterAutoScalerMapGetter(task -> Collections.singletonList("cluster1"));
         schedulingService.start();
         schedulingService.addLeases(leases);
-        for (int i = 0; i < numTasks; i++)
+        for (int i = 0; i < numTasks; i++) {
             queue.queueTask(
-                    QueuableTaskProvider.wrapTask(
-                            new QAttributes.QAttributesAdaptor(0, "default"),
-                            TaskRequestProvider.getTaskRequest(1, 10, 1)
-                    )
+                QueuableTaskProvider.wrapTask(
+                    new QAttributes.QAttributesAdaptor(0, "default"),
+                    TaskRequestProvider.getTaskRequest(1, 10, 1)
+                )
             );
-        if (!latch.await(10, TimeUnit.SECONDS))
+        }
+        if (!latch.await(10, TimeUnit.SECONDS)) {
             Assert.fail("Timeout waiting for tasks to get assigned");
+        }
         // wait for scale up to happen
-        if (!initialScaleUpLatch.await(cooldownMillis + 1000, TimeUnit.MILLISECONDS))
+        if (!initialScaleUpLatch.await(cooldownMillis + 1000, TimeUnit.MILLISECONDS)) {
             Assert.fail("Timeout waiting for initial scale up request");
+        }
         Assert.assertEquals(2, scaleUpRequests.size());
         scaleUpRequests.clear();
         scaleUpLatchRef.set(null);
@@ -1205,19 +1200,19 @@ public class AutoScalerTest {
         int maxIdle = 1;
         int numberOfHostsPerCluster = maxIdle * 2;
         final long cooldownMillis = 1_000;
-        final String CLUSTER1 = "cluster1";
-        final String CLUSTER2 = "cluster2";
+        final String cluster1 = "cluster1";
+        final String cluster2 = "cluster2";
         final CountDownLatch countDownLatch = new CountDownLatch(2);
 
         // create autoscaling rules for 2 clusters
-        final AutoScaleRule cluster1Rule = AutoScaleRuleProvider.createWithMaxSize(CLUSTER1, minIdle, maxIdle, cooldownMillis / 1000L, 1, 1000, numberOfHostsPerCluster);
-        final AutoScaleRule cluster2Rule = AutoScaleRuleProvider.createWithMaxSize(CLUSTER2, minIdle, maxIdle, cooldownMillis / 1000L, 1, 1000, numberOfHostsPerCluster);
+        final AutoScaleRule cluster1Rule = AutoScaleRuleProvider.createWithMaxSize(cluster1, minIdle, maxIdle, cooldownMillis / 1000L, 1, 1000, numberOfHostsPerCluster);
+        final AutoScaleRule cluster2Rule = AutoScaleRuleProvider.createWithMaxSize(cluster2, minIdle, maxIdle, cooldownMillis / 1000L, 1, 1000, numberOfHostsPerCluster);
 
         // create the maxIdle * 2 leases (machines) for each cluster
         Map<String, Protos.Attribute> attributes1 = new HashMap<>();
         Protos.Attribute attribute1 = Protos.Attribute.newBuilder().setName(hostAttrName)
                 .setType(Protos.Value.Type.TEXT)
-                .setText(Protos.Value.Text.newBuilder().setValue(CLUSTER1)).build();
+                .setText(Protos.Value.Text.newBuilder().setValue(cluster1)).build();
         List<VirtualMachineLease.Range> ports = new ArrayList<>();
         ports.add(new VirtualMachineLease.Range(1, 10));
         attributes1.put(hostAttrName, attribute1);
@@ -1225,7 +1220,7 @@ public class AutoScalerTest {
         Map<String, Protos.Attribute> attributes2 = new HashMap<>();
         Protos.Attribute attribute2 = Protos.Attribute.newBuilder().setName(hostAttrName)
                 .setType(Protos.Value.Type.TEXT)
-                .setText(Protos.Value.Text.newBuilder().setValue(CLUSTER2)).build();
+                .setText(Protos.Value.Text.newBuilder().setValue(cluster2)).build();
         attributes2.put(hostAttrName, attribute2);
         final List<VirtualMachineLease> leases = new ArrayList<>();
 
