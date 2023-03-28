@@ -16,7 +16,6 @@
 
 package com.netflix.fenzo;
 
-import com.netflix.fenzo.functions.Action1;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -31,11 +30,8 @@ public class SingleOfferModelTests {
         taskScheduler = new TaskScheduler.Builder()
                 .withLeaseOfferExpirySecs(1000000)
                 .withSingleOfferPerVM(true)
-                .withLeaseRejectAction(new Action1<VirtualMachineLease>() {
-                    @Override
-                    public void call(VirtualMachineLease virtualMachineLease) {
-                        System.out.println("Rejecting offer on host " + virtualMachineLease.hostname());
-                    }
+                .withLeaseRejectAction(virtualMachineLease -> {
+                    System.out.println("Rejecting offer on host " + virtualMachineLease.hostname());
                 })
                 .build();
     }

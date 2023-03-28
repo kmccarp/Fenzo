@@ -16,8 +16,6 @@
 
 package com.netflix.fenzo;
 
-import com.netflix.fenzo.functions.Action1;
-import com.netflix.fenzo.functions.Func1;
 import com.netflix.fenzo.plugins.BalancedHostAttrConstraint;
 import com.netflix.fenzo.plugins.BinPackingFitnessCalculators;
 import com.netflix.fenzo.plugins.ExclusiveHostConstraint;
@@ -33,7 +31,7 @@ import java.util.*;
 
 public class ConstraintsTests {
 
-    private final static String zoneAttrName="Zone";
+    private static final String zoneAttrName="Zone";
     private final int numZones=3;
     Map<String, Protos.Attribute> attributesA = new HashMap<>();
     Map<String, Protos.Attribute> attributesB = new HashMap<>();
@@ -61,22 +59,15 @@ public class ConstraintsTests {
     private TaskScheduler getTaskScheduler(boolean useBinPacking) {
         TaskScheduler.Builder builder = new TaskScheduler.Builder()
                 .withLeaseOfferExpirySecs(1000000)
-                .withLeaseRejectAction(new Action1<VirtualMachineLease>() {
-                    @Override
-                    public void call(VirtualMachineLease virtualMachineLease) {
-                        System.out.println("Rejecting offer on host " + virtualMachineLease.hostname());
-                        Assert.fail();
-                    }
+                .withLeaseRejectAction(virtualMachineLease -> {
+                    System.out.println("Rejecting offer on host " + virtualMachineLease.hostname());
+                    Assert.fail();
                 })
-                .withFitnessGoodEnoughFunction(new Func1<Double, Boolean>() {
-                    @Override
-                    public Boolean call(Double aDouble) {
-                        return aDouble > 1.0;
-                    }
-                });
-        if(useBinPacking)
+                .withFitnessGoodEnoughFunction(aDouble -> aDouble > 1.0);
+        if (useBinPacking) {
             builder = builder
-                    .withFitnessCalculator(BinPackingFitnessCalculators.cpuMemBinPacker);
+                .withFitnessCalculator(BinPackingFitnessCalculators.cpuMemBinPacker);
+        }
         return builder.build();
     }
 
@@ -91,12 +82,7 @@ public class ConstraintsTests {
     public void testHardConstraint1() throws Exception {
         Map<String, TaskRequest> taskMap = new HashMap<>();
         final Map<String, Set<String>> taskToCoTasksMap = new HashMap<>();
-        ConstraintEvaluator zoneConstraint = new UniqueHostAttrConstraint(new Func1<String, Set<String>>() {
-            @Override
-            public Set<String> call(String s) {
-                return taskToCoTasksMap.get(s);
-            }
-        }, zoneAttrName);
+        ConstraintEvaluator zoneConstraint = new UniqueHostAttrConstraint(taskToCoTasksMap::get, zoneAttrName);
         List<TaskRequest> tasks = getThreeTasks(taskMap, taskToCoTasksMap, zoneConstraint, null);
         List<VirtualMachineLease> leases = getThreeVMs();
         TaskScheduler taskScheduler = getTaskScheduler();
@@ -110,17 +96,12 @@ public class ConstraintsTests {
     @Test
     public void testHardConstraint2() throws Exception {
         // first, make sure that when not using zone constraint, 3 tasks land on the same zone
-        Set<String> zonesUsed = getZonesUsed(new HashMap<String, TaskRequest>(), new HashMap<String, Set<String>>(), null, null);
+        Set<String> zonesUsed = getZonesUsed(new HashMap<>(), new HashMap<>(), null, null);
         Assert.assertEquals("Without zone constraints expecting 3 tasks to land on same zone", 1, zonesUsed.size());
         // now test with zone constraint and make sure they go on to one zone each
         Map<String, TaskRequest> taskMap = new HashMap<>();
         final Map<String, Set<String>> taskToCoTasksMap = new HashMap<>();
-        ConstraintEvaluator zoneConstraint = new UniqueHostAttrConstraint(new Func1<String, Set<String>>() {
-            @Override
-            public Set<String> call(String s) {
-                return taskToCoTasksMap.get(s);
-            }
-        }, zoneAttrName);
+        ConstraintEvaluator zoneConstraint = new UniqueHostAttrConstraint(taskToCoTasksMap::get, zoneAttrName);
         zonesUsed = getZonesUsed(taskMap, taskToCoTasksMap, zoneConstraint, null);
         Assert.assertEquals("With zone constraint, expecting 3 tasks to land on 3 zones", 3, zonesUsed.size());
     }
@@ -130,12 +111,7 @@ public class ConstraintsTests {
     public void testSoftConstraint1() throws Exception {
         Map<String, TaskRequest> taskMap = new HashMap<>();
         final Map<String, Set<String>> taskToCoTasksMap = new HashMap<>();
-        UniqueHostAttrConstraint zoneConstraint = new UniqueHostAttrConstraint(new Func1<String, Set<String>>() {
-            @Override
-            public Set<String> call(String s) {
-                return taskToCoTasksMap.get(s);
-            }
-        }, zoneAttrName);
+        UniqueHostAttrConstraint zoneConstraint = new UniqueHostAttrConstraint(taskToCoTasksMap::get, zoneAttrName);
         Set<String> zonesUsed = getZonesUsed(taskMap, taskToCoTasksMap, null, AsSoftConstraint.get(zoneConstraint));
         Assert.assertEquals(3, zonesUsed.size());
     }
@@ -147,12 +123,7 @@ public class ConstraintsTests {
     public void testSoftConstraint2() throws Exception {
         Map<String, TaskRequest> taskMap = new HashMap<>();
         final Map<String, Set<String>> taskToCoTasksMap = new HashMap<>();
-        UniqueHostAttrConstraint zoneConstraint = new UniqueHostAttrConstraint(new Func1<String, Set<String>>() {
-            @Override
-            public Set<String> call(String s) {
-                return taskToCoTasksMap.get(s);
-            }
-        }, zoneAttrName);
+        UniqueHostAttrConstraint zoneConstraint = new UniqueHostAttrConstraint(taskToCoTasksMap::get, zoneAttrName);
         List<TaskRequest> threeTasks = getThreeTasks(taskMap, taskToCoTasksMap, null, AsSoftConstraint.get(zoneConstraint));
         List<VirtualMachineLease> twoVMs = getThreeVMs().subList(0, 2);
         TaskScheduler taskScheduler = getTaskScheduler();
@@ -175,12 +146,7 @@ public class ConstraintsTests {
     public void testBalancedHostAttrSoftConstraint() throws Exception {
         Map<String, TaskRequest> taskMap = new HashMap<>();
         final Map<String, Set<String>> taskToCoTasksMap = new HashMap<>();
-        BalancedHostAttrConstraint constraint = new BalancedHostAttrConstraint(new Func1<String, Set<String>>() {
-            @Override
-            public Set<String> call(String s) {
-                return taskToCoTasksMap.get(s);
-            }
-        }, zoneAttrName, 3);
+        BalancedHostAttrConstraint constraint = new BalancedHostAttrConstraint(taskToCoTasksMap::get, zoneAttrName, 3);
         List<TaskRequest> sixTasks = getThreeTasks(taskMap, taskToCoTasksMap, null, constraint.asSoftConstraint());
         sixTasks.addAll(getThreeTasks(taskMap, taskToCoTasksMap, null, constraint.asSoftConstraint()));
         final List<VirtualMachineLease> threeVMs = getThreeVMs();
@@ -197,12 +163,7 @@ public class ConstraintsTests {
     public void testBalancedHostAttrHardConstraint() throws Exception {
         Map<String, TaskRequest> taskMap = new HashMap<>();
         final Map<String, Set<String>> taskToCoTasksMap = new HashMap<>();
-        BalancedHostAttrConstraint constraint = new BalancedHostAttrConstraint(new Func1<String, Set<String>>() {
-            @Override
-            public Set<String> call(String s) {
-                return taskToCoTasksMap.get(s);
-            }
-        }, zoneAttrName, 3);
+        BalancedHostAttrConstraint constraint = new BalancedHostAttrConstraint(taskToCoTasksMap::get, zoneAttrName, 3);
         List<TaskRequest> sixTasks = getThreeTasks(taskMap, taskToCoTasksMap, constraint, null);
         sixTasks.addAll(getThreeTasks(taskMap, taskToCoTasksMap, constraint, null));
         final List<VirtualMachineLease> threeVMs = getThreeVMs();
@@ -219,16 +180,12 @@ public class ConstraintsTests {
     @Test
     public void testUniqueHostConstraint() throws Exception {
         final Map<String, Set<String>> taskToCoTasksMap = new HashMap<>();
-        UniqueHostAttrConstraint uniqueHostConstraint = new UniqueHostAttrConstraint(new Func1<String, Set<String>>() {
-            @Override
-            public Set<String> call(String s) {
-                return taskToCoTasksMap.get(s);
-            }
-        });
+        UniqueHostAttrConstraint uniqueHostConstraint = new UniqueHostAttrConstraint(taskToCoTasksMap::get);
         List<TaskRequest> tasks = new ArrayList<>();
         // First, create 5 tasks without unique host constraint
-        for(int i=0; i<5; i++)
+        for (int i = 0; i < 5; i++) {
             tasks.add(TaskRequestProvider.getTaskRequest(1, 1000, 1));
+        }
         TaskScheduler taskScheduler = getTaskScheduler();
         List<VirtualMachineLease> leases = LeaseProvider.getLeases(5, 8, 8000, 1, 10);
         Map<String, VMAssignmentResult> resultMap = taskScheduler.scheduleOnce(tasks, leases).getResultMap();
@@ -252,13 +209,15 @@ public class ConstraintsTests {
         Assert.assertEquals("Tasks without unique host constraints should've gotten assigned", tasks.size(), numAssigned);
         // now test with tasks with unique host constraint
         tasks.clear();
-        for(int i=0; i<5; i++)
+        for (int i = 0; i < 5; i++) {
             tasks.add(TaskRequestProvider.getTaskRequest(1, 1000, 1, Arrays.asList(uniqueHostConstraint), null));
+        }
         for(TaskRequest r: tasks) {
-            taskToCoTasksMap.put(r.getId(), new HashSet<String>());
+            taskToCoTasksMap.put(r.getId(), new HashSet<>());
             for(TaskRequest rr: tasks)
-                if(!rr.getId().equals(r.getId()))
+                if (!rr.getId().equals(r.getId())) {
                     taskToCoTasksMap.get(r.getId()).add(rr.getId());
+                }
         }
         resultMap = taskScheduler.scheduleOnce(tasks, leases).getResultMap();
         Assert.assertNotNull(resultMap);
@@ -295,10 +254,12 @@ public class ConstraintsTests {
         for(VMAssignmentResult result: resultMap.values()) {
             Assert.assertEquals(1, result.getTasksAssigned().size());
             TaskAssignmentResult tResult = result.getTasksAssigned().iterator().next();
-            if(tResult.getRequest().getId().equals(noCtask.getId()))
+            if (tResult.getRequest().getId().equals(noCtask.getId())) {
                 Assert.assertEquals("Task with no constraint should've landed on the already used host", usedHostname, result.getHostname());
-            else
+            }
+            else {
                 Assert.assertFalse(usedHostname.equals(result.getHostname()));
+            }
         }
     }
 
@@ -349,12 +310,7 @@ public class ConstraintsTests {
         List<VirtualMachineLease> remainingLeases = Arrays.asList(LeaseProvider.getConsumedLease(onlyResult));
         String usedZone = onlyResult.getLeasesUsed().iterator().next().getAttributeMap().get(zoneAttrName).getText().getValue();
         final int useZoneIndex = usedZone.equals(zones[0])? 1 : 0; // pick a zone other than used
-        HostAttrValueConstraint c = new HostAttrValueConstraint(zoneAttrName, new Func1<String, String>() {
-            @Override
-            public String call(String s) {
-                return zones[useZoneIndex];
-            }
-        });
+        HostAttrValueConstraint c = new HostAttrValueConstraint(zoneAttrName, s -> zones[useZoneIndex]);
         tasks.clear();
         tasks.add(TaskRequestProvider.getTaskRequest(1, 1000, 1));
         // now add task with host attr value constraint
@@ -381,18 +337,8 @@ public class ConstraintsTests {
         final List<VirtualMachineLease> threeVMs = getThreeVMs();
         List<TaskRequest> tasks = new ArrayList<>();
         tasks.add(TaskRequestProvider.getTaskRequest(1, 1000, 1));
-        HostAttrValueConstraint c1 = new HostAttrValueConstraint(null, new Func1<String, String>() {
-            @Override
-            public String call(String s) {
-                return threeVMs.get(0).hostname();
-            }
-        });
-        HostAttrValueConstraint c2 = new HostAttrValueConstraint(null, new Func1<String, String>() {
-            @Override
-            public String call(String s) {
-                return threeVMs.get(1).hostname();
-            }
-        });
+        HostAttrValueConstraint c1 = new HostAttrValueConstraint(null, s -> threeVMs.get(0).hostname());
+        HostAttrValueConstraint c2 = new HostAttrValueConstraint(null, s -> threeVMs.get(1).hostname());
         TaskRequest t1 = TaskRequestProvider.getTaskRequest(1, 1000, 1, Arrays.asList(c1), null);
         TaskRequest t2 = TaskRequestProvider.getTaskRequest(1, 1000, 1, Arrays.asList(c2), null);
         tasks.add(t1);
@@ -402,10 +348,12 @@ public class ConstraintsTests {
         Assert.assertEquals(2, resultMap.size());
         for(VMAssignmentResult result: resultMap.values()) {
             for(TaskAssignmentResult r: result.getTasksAssigned()) {
-                if(r.getRequest().getId().equals(t1.getId()))
+                if (r.getRequest().getId().equals(t1.getId())) {
                     Assert.assertEquals(threeVMs.get(0).hostname(), result.getHostname());
-                else if(r.getRequest().getId().equals(t2.getId()))
+                }
+                else if (r.getRequest().getId().equals(t2.getId())) {
                     Assert.assertEquals(threeVMs.get(1).hostname(), result.getHostname());
+                }
             }
         }
     }
@@ -448,11 +396,13 @@ public class ConstraintsTests {
                                             ConstraintEvaluator hardConstraint, VMTaskFitnessCalculator softConstraint) {
         List<TaskRequest> tasks = new ArrayList<>(3);
         List<ConstraintEvaluator> constraintEvaluators = new ArrayList<>(1);
-        if(hardConstraint!=null)
+        if (hardConstraint != null) {
             constraintEvaluators.add(hardConstraint);
+        }
         List<VMTaskFitnessCalculator> softConstraints = new ArrayList<>();
-        if(softConstraint!=null)
+        if (softConstraint != null) {
             softConstraints.add(softConstraint);
+        }
         for(int i=0; i<numZones; i++) {
             TaskRequest t = TaskRequestProvider.getTaskRequest(1, 1000, 1, constraintEvaluators, softConstraints);
             taskMap.put(t.getId(), t);
@@ -472,11 +422,8 @@ public class ConstraintsTests {
         final List<VirtualMachineLease> threeVMs = getThreeVMs();
         List<TaskRequest> tasks = new ArrayList<>();
         tasks.add(TaskRequestProvider.getTaskRequest(1, 1000, 1));
-        HostAttrValueConstraint c1 = new HostAttrValueConstraint(null, new Func1<String, String>() {
-            @Override
-            public String call(String s) {
-                throw new NullPointerException("Test exception");
-            }
+        HostAttrValueConstraint c1 = new HostAttrValueConstraint(null, s -> {
+            throw new NullPointerException("Test exception");
         });
         tasks.add(TaskRequestProvider.getTaskRequest(1, 100, 1));
         tasks.add(TaskRequestProvider.getTaskRequest(1, 1000, 1, Collections.singletonList(c1), null));
