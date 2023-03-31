@@ -16,8 +16,6 @@
 
 package com.netflix.fenzo;
 
-import com.netflix.fenzo.functions.Action1;
-import com.netflix.fenzo.functions.Func1;
 import com.netflix.fenzo.plugins.BinPackingFitnessCalculators;
 
 import java.util.ArrayList;
@@ -52,8 +50,9 @@ public class TestLotsOfTasks {
         double fractionHalfSized=0.4;
         double fractionThreeQuarterSized = 1.0 - fractionHalfSized - fractionSingleCore;
         int numCoresUsed=0;
-        for(int t=0; t<numHosts*numCores*fractionSingleCore; t++, numCoresUsed++)
+        for (int t = 0; t < numHosts * numCores * fractionSingleCore; t++, numCoresUsed++) {
             requests.add(TaskRequestProvider.getTaskRequest(1, 1000, 1));
+        }
         System.out.println("numCoresRequested=" + numCoresUsed);
         for(int t=0; t<(numCores*numHosts*fractionHalfSized/(numCores/2)); t++) {
             requests.add(TaskRequestProvider.getTaskRequest(numCores/2, numCores*1000/2, 1));
@@ -66,8 +65,9 @@ public class TestLotsOfTasks {
         }
         // fill remaining cores with single-core tasks to get 100% potential utilization
         System.out.println("#Tasks=" + requests.size() + ", numCoresRequested=" + numCoresUsed + " of possible " + (numCores*numHosts));
-        for(int t=0; t<(numCores*numHosts-numCoresUsed); t++)
+        for (int t = 0; t < (numCores * numHosts - numCoresUsed); t++) {
             requests.add(TaskRequestProvider.getTaskRequest(1, 1000, 1));
+        }
         List<TaskRequest> result = new ArrayList<>();
         // randomly add into result from requests
         for(int i=0; i<20; i++) {
@@ -77,8 +77,9 @@ public class TestLotsOfTasks {
                     result.add(iterator.next());
                     iterator.remove();
                 }
-                else
+                else {
                     iterator.next();
+                }
             }
         }
         // add all remaining tasks
@@ -130,8 +131,9 @@ public class TestLotsOfTasks {
     }
 
     private static void addToAsgmtMap(Map<String, List<TaskRequest>> theMap, String hostname, TaskRequest request) {
-        if(theMap.get(hostname)==null)
-            theMap.put(hostname, new ArrayList<TaskRequest>());
+        if (theMap.get(hostname) == null) {
+            theMap.put(hostname, new ArrayList<>());
+        }
         theMap.get(hostname).add(request);
     }
 
@@ -150,10 +152,12 @@ public class TestLotsOfTasks {
         VMAssignmentResult assignmentResult = schedulingResult.getResultMap().values().iterator().next();
         TaskAssignmentResult taskAssignmentResult = assignmentResult.getTasksAssigned().iterator().next();
         TaskRequest request = taskAssignmentResult.getRequest();
-        if(jobIds.remove(request.getId()) == null)
+        if (jobIds.remove(request.getId()) == null) {
             System.err.println("    Removed " + request.getId() + " already!");
-        else
+        }
+        else {
             totalAssignedCpus += request.getCPUs();
+        }
         addToAsgmtMap(assignmentsMap, assignmentResult.getHostname(), request);
         //System.out.println(assignmentResult.getHostname() + " : " + request.getId());
         scheduler.getTaskAssigner().call(request, assignmentResult.getHostname());
@@ -161,17 +165,20 @@ public class TestLotsOfTasks {
                 request.getMemory(), taskAssignmentResult.getAssignedPorts());
         for(int i=0; i<4; i++) {
             leases.clear();
-            if(consumedLease.cpuCores()>0.0 && consumedLease.memoryMB()>0.0)
+            if (consumedLease.cpuCores() > 0.0 && consumedLease.memoryMB() > 0.0) {
                 leases.add(consumedLease);
+            }
             schedulingResult = scheduler.scheduleOnce(tasks.subList(n++, n), leases);
             totalNumAllocations += schedulingResult.getNumAllocations();
             assignmentResult = schedulingResult.getResultMap().values().iterator().next();
             taskAssignmentResult = assignmentResult.getTasksAssigned().iterator().next();
             request = taskAssignmentResult.getRequest();
-            if(jobIds.remove(request.getId()) == null)
+            if (jobIds.remove(request.getId()) == null) {
                 System.err.println("    Removed " + request.getId() + " already!");
-            else
+            }
+            else {
                 totalAssignedCpus += request.getCPUs();
+            }
             addToAsgmtMap(assignmentsMap, assignmentResult.getHostname(), request);
             //System.out.println(assignmentResult.getHostname() + " : " + request.getId());
             scheduler.getTaskAssigner().call(request, assignmentResult.getHostname());
@@ -186,8 +193,9 @@ public class TestLotsOfTasks {
         int numIters=0;
         int totalTasksAssigned=n;
         leases.clear();
-        if(consumedLease.cpuCores()>0.0 && consumedLease.memoryMB()>0.0)
+        if (consumedLease.cpuCores() > 0.0 && consumedLease.memoryMB() > 0.0) {
             leases.add(consumedLease);
+        }
         long st = 0;
         long totalTime=0;
         int batchSize=200;
@@ -207,8 +215,9 @@ public class TestLotsOfTasks {
                 double usedMem=0.0;
                 List<Integer> portsUsed = new ArrayList<>();
                 for(TaskAssignmentResult t: result.getTasksAssigned()) {
-                    if(jobIds.remove(t.getRequest().getId()) == null)
+                    if (jobIds.remove(t.getRequest().getId()) == null) {
                         System.err.println("    Removed " + t.getRequest().getId() + " already!");
+                    }
                     lastJobId = t.getRequest().getId();
                     addToAsgmtMap(assignmentsMap, result.getHostname(), t.getRequest());
                     assigned++;
@@ -223,20 +232,25 @@ public class TestLotsOfTasks {
 //                    System.out.println(buf.toString());
                 }
                 consumedLease = LeaseProvider.getConsumedLease(result);
-                if(consumedLease.cpuCores()>0.0 && consumedLease.memoryMB()>0.0)
+                if (consumedLease.cpuCores() > 0.0 && consumedLease.memoryMB() > 0.0) {
                     leases.add(consumedLease);
+                }
             }
             //printResourceStatus(scheduler.getResourceStatus());
             long delta = System.currentTimeMillis()-st;
             //System.out.println("                    delta = " + delta);
-            if(first)
-                first=false; // skip time measurements the first time
+            if (first) {
+                first = false;
+            }
+            // skip time measurements the first time
             else {
                 totalTime += delta;
-                if(delta>max)
-                    max=delta;
-                if(min==0.0 || min>delta)
+                if (delta > max) {
+                    max = delta;
+                }
+                if (min == 0.0 || min > delta) {
                     min = delta;
+                }
             }
             //System.out.println(assigned + " of " + (until-n) + " tasks assigned using " + allocationsCounter.get() + " allocations");
             totalTasksAssigned += assigned;
@@ -256,19 +270,17 @@ public class TestLotsOfTasks {
             boolean hasAvailCpu=true;
             boolean hasAvailMem=true;
             for(Map.Entry<VMResource, Double[]> resourceEntry: entry.getValue().entrySet()) {
-                switch (resourceEntry.getKey()) {
-                    case CPU:
-                        if(resourceEntry.getValue()[0]<tester.numCores) {
-                            hasAvailCpu=false;
-                            unusedCpus += tester.numCores-resourceEntry.getValue()[0];
-                        }
-                        break;
-                    case Memory:
-                        if(resourceEntry.getValue()[0]<tester.numCores*1000) {
-                            hasAvailMem=false;
-                            ununsedMem += tester.numCores*1000 - resourceEntry.getValue()[0];
-                        }
-                        break;
+                if (resourceEntry.getKey() == VMResource.CPU) {
+                    if (resourceEntry.getValue()[0] < tester.numCores) {
+                        hasAvailCpu = false;
+                        unusedCpus += tester.numCores - resourceEntry.getValue()[0];
+                    }
+                }
+                else if (resourceEntry.getKey() == VMResource.Memory) {
+                    if (resourceEntry.getValue()[0] < tester.numCores * 1000) {
+                        hasAvailMem = false;
+                        ununsedMem += tester.numCores * 1000 - resourceEntry.getValue()[0];
+                    }
                 }
                 buf.append(resourceEntry.getKey()).append(": used=").append(resourceEntry.getValue()[0])
                         .append(", available=").append(resourceEntry.getValue()[1]).append(",");
@@ -341,25 +353,17 @@ public class TestLotsOfTasks {
 
     private static TaskScheduler getTaskScheduler() {
         return new TaskScheduler.Builder()
-                    .withFitnessGoodEnoughFunction(new Func1<Double, Boolean>() {
-                        @Override
-                        public Boolean call(Double aDouble) {
-                            return aDouble >= GOOD_ENOUGH_FITNESS;
-                        }
-                    })
+                    .withFitnessGoodEnoughFunction(aDouble -> aDouble >= GOOD_ENOUGH_FITNESS)
                     .withFitnessCalculator(BinPackingFitnessCalculators.cpuBinPacker)
                     .withLeaseOfferExpirySecs(1000000)
-                    .withLeaseRejectAction(new Action1<VirtualMachineLease>() {
-                        @Override
-                        public void call(VirtualMachineLease lease) {
-                            System.err.println("Unexpected to reject lease on " + lease.hostname());
-                        }
+                    .withLeaseRejectAction(lease -> {
+                        System.err.println("Unexpected to reject lease on " + lease.hostname());
                     })
                     .build();
     }
 
     private static class BinSpreader implements VMTaskFitnessCalculator {
-        private VMTaskFitnessCalculator binPacker = BinPackingFitnessCalculators.cpuMemBinPacker;
+        private final VMTaskFitnessCalculator binPacker = BinPackingFitnessCalculators.cpuMemBinPacker;
         @Override
         public String getName() {
             return "Bin Spreader";
