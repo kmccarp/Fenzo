@@ -89,10 +89,10 @@ public class SampleDataGenerator {
         return tierSla;
     }
 
-    public class TierState {
+    public final class TierState {
         private final int tierNumber;
         private ResAllocs tierCapacity;
-        private Map<String, ResAllocs> bucketCapacities;
+        private final Map<String, ResAllocs> bucketCapacities;
 
         private TierState(int tierNumber, ResAllocs tierCapacity) {
             this.tierNumber = tierNumber;
