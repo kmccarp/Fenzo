@@ -57,7 +57,7 @@ public class RandomTaskGenerator {
         private final long runUntilMillis;
         private final long runtimeMillis;
         private String hostname;
-        private AssignedResources assignedResources=null;
+        private AssignedResources assignedResources;
         public GeneratedTask(final TaskRequest taskRequest, final long runtimeMillis, final long runUntilMillis) {
             this.taskRequest = taskRequest;
             this.runUntilMillis = runUntilMillis;
@@ -128,8 +128,9 @@ public class RandomTaskGenerator {
         }
         @Override
         public int compareTo(GeneratedTask o) {
-            if(o==null)
+            if (o == null) {
                 return -1;
+            }
             return Long.compare(runUntilMillis, o.runUntilMillis);
         }
         public String getHostname() {
@@ -148,37 +149,36 @@ public class RandomTaskGenerator {
     private final BlockingQueue<GeneratedTask> taskQueue;
 
     RandomTaskGenerator(BlockingQueue<GeneratedTask> taskQueue, long interBatchIntervalMillis, int minTasksPerCoreSizePerBatch, List<TaskType> taskTypes) {
-        if(taskTypes==null || taskTypes.isEmpty())
+        if (taskTypes == null || taskTypes.isEmpty()) {
             throw new IllegalArgumentException();
+        }
         this.taskQueue = taskQueue;
         this.interBatchIntervalMillis = interBatchIntervalMillis;
         this.minTasksPerCoreSizePerBatch = minTasksPerCoreSizePerBatch;
         minRatio=Double.MAX_VALUE;
         this.taskTypes = taskTypes;
         for(TaskType j: taskTypes)
-            if(j.getRatioOfTasks()<minRatio)
+            if (j.getRatioOfTasks() < minRatio) {
                 minRatio = j.getRatioOfTasks();
+            }
     }
 
     void start() {
-        new ScheduledThreadPoolExecutor(1).scheduleWithFixedDelay(new Runnable() {
-            @Override
-            public void run() {
-                long now = System.currentTimeMillis();
-                int numTasksGenerated=0;
-                for(TaskType taskType: taskTypes) {
-                    int numTasks = (int) (taskType.getRatioOfTasks()*minTasksPerCoreSizePerBatch/minRatio);
-                    for(int t=0; t<numTasks; t++) {
-                        long runtime = getRuntime(taskType.minRunDurationMillis, taskType.maxRunDurationMillis);
-                        taskQueue.offer(new GeneratedTask(
-                                TaskRequestProvider.getTaskRequest(taskType.coreSize, taskType.coreSize*memoryPerCore, 1),
-                                runtime, now+runtime
-                        ));
-                        numTasksGenerated++;
-                    }
+        new ScheduledThreadPoolExecutor(1).scheduleWithFixedDelay(() -> {
+            long now = System.currentTimeMillis();
+            int numTasksGenerated = 0;
+            for (TaskType taskType: taskTypes) {
+                int numTasks = (int) (taskType.getRatioOfTasks() * minTasksPerCoreSizePerBatch / minRatio);
+                for (int t = 0; t < numTasks; t++) {
+                    long runtime = getRuntime(taskType.minRunDurationMillis, taskType.maxRunDurationMillis);
+                    taskQueue.offer(new GeneratedTask(
+                        TaskRequestProvider.getTaskRequest(taskType.coreSize, taskType.coreSize * memoryPerCore, 1),
+                        runtime, now + runtime
+                    ));
+                    numTasksGenerated++;
                 }
-                System.out.println("        " + numTasksGenerated + " tasks generated");
             }
+            System.out.println("        " + numTasksGenerated + " tasks generated");
         }, interBatchIntervalMillis, interBatchIntervalMillis, TimeUnit.MILLISECONDS);
     }
 
