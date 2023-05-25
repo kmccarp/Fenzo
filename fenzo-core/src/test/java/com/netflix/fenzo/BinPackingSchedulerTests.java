@@ -144,27 +144,30 @@ public class BinPackingSchedulerTests {
         double memory2=800;
         double network1=400;
         double network2 = 800;
-        int N = 10; // #instances
+        int n = 10; // #instances
         // First create N 8-core machines and then N 4-core machines
-        List<VirtualMachineLease> leases = LeaseProvider.getLeases(N, cpuCores2, memory2, network2, 1, 100);
-        leases.addAll(LeaseProvider.getLeases(N, N, cpuCores1, memory1, network1, 1, 100));
+        List<VirtualMachineLease> leases = LeaseProvider.getLeases(n, cpuCores2, memory2, network2, 1, 100);
+        leases.addAll(LeaseProvider.getLeases(n, n, cpuCores1, memory1, network1, 1, 100));
         // Create as many tasks as to fill all of the 4-core machines, and then one more
         List<TaskRequest> taskRequests = new ArrayList<>();
-        for(int i=0; i<N*cpuCores1+1; i++)
-            taskRequests.add(TaskRequestProvider.getTaskRequest(1, memory1/cpuCores1, network1/cpuCores1, 1));
+        for (int i = 0; i < n * cpuCores1 + 1; i++) {
+            taskRequests.add(TaskRequestProvider.getTaskRequest(1, memory1 / cpuCores1, network1 / cpuCores1, 1));
+        }
         Map<String,VMAssignmentResult> resultMap = scheduler.scheduleOnce(taskRequests, leases).getResultMap();
-        Assert.assertEquals(N+1, resultMap.size());
+        Assert.assertEquals(n+1, resultMap.size());
         int hosts1=0;
         int hosts2=0;
         for(VMAssignmentResult result: resultMap.values()) {
             List<VirtualMachineLease> leasesUsed = result.getLeasesUsed();
             Assert.assertEquals(1, leasesUsed.size());
-            if(leasesUsed.get(0).cpuCores() == cpuCores1)
+            if (leasesUsed.get(0).cpuCores() == cpuCores1) {
                 hosts1++;
-            else
+            }
+            else {
                 hosts2++;
+            }
         }
-        Assert.assertEquals(N, hosts1);
+        Assert.assertEquals(n, hosts1);
         Assert.assertEquals(1, hosts2);
     }
 
@@ -185,8 +188,9 @@ public class BinPackingSchedulerTests {
         // create as many tasks as to fill all of the memory2 hosts, and then one more
         List<TaskRequest> taskRequests = new ArrayList<>();
         double memToAsk=100;
-        for(int i=0; i<(N*memory2/memToAsk)+1; i++)
+        for (int i = 0; i < (N * memory2 / memToAsk) + 1; i++) {
             taskRequests.add(TaskRequestProvider.getTaskRequest(1, memToAsk, 1));
+        }
         TaskScheduler scheduler = getScheduler(BinPackingFitnessCalculators.memoryBinPacker);
         SchedulingResult schedulingResult = scheduler.scheduleOnce(taskRequests, leases);
         Assert.assertEquals(N+1, schedulingResult.getResultMap().size());
@@ -195,10 +199,12 @@ public class BinPackingSchedulerTests {
         for(VMAssignmentResult result: schedulingResult.getResultMap().values()) {
             List<VirtualMachineLease> leasesUsed = result.getLeasesUsed();
             Assert.assertEquals(1, leasesUsed.size());
-            if(leasesUsed.get(0).cpuCores() == cpus1)
+            if (leasesUsed.get(0).cpuCores() == cpus1) {
                 hosts1++;
-            else
+            }
+            else {
                 hosts2++;
+            }
         }
         Assert.assertEquals(N, hosts2);
         Assert.assertEquals(1, hosts1);

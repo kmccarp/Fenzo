@@ -176,12 +176,9 @@ public class SampleFramework {
         launchedTasks = new HashMap<>();
         scheduler = new TaskScheduler.Builder()
                 .withLeaseOfferExpirySecs(1000000000)
-                .withLeaseRejectAction(new Action1<VirtualMachineLease>() {
-                    @Override
-                    public void call(VirtualMachineLease lease) {
-                        System.out.println("Declining offer on " + lease.hostname());
-                        ref.get().declineOffer(lease.getOffer().getId());
-                    }
+                .withLeaseRejectAction(lease -> {
+                    System.out.println("Declining offer on " + lease.hostname());
+                    ref.get().declineOffer(lease.getOffer().getId());
                 })
                 .build();
         Protos.FrameworkInfo framework = Protos.FrameworkInfo.newBuilder()
@@ -208,12 +205,7 @@ public class SampleFramework {
     }
 
     public void start() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                runAll();
-            }
-        }).start();
+        new Thread(this::runAll).start();
     }
 
     /**
@@ -234,8 +226,9 @@ public class SampleFramework {
         System.out.println("Running all");
         List<VirtualMachineLease> newLeases = new ArrayList<>();
         while(true) {
-            if(isShutdown.get())
+            if (isShutdown.get()) {
                 return;
+            }
             newLeases.clear();
             List<TaskRequest> newTaskRequests = new ArrayList<>();
             System.out.println("#Pending tasks: " + pendingTasksMap.size());

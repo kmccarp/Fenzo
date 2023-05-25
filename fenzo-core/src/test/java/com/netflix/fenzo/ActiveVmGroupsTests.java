@@ -22,7 +22,6 @@ import org.apache.mesos.Protos;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import com.netflix.fenzo.functions.Action1;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -44,11 +43,8 @@ public class ActiveVmGroupsTests {
     public void setUp() throws Exception {
         taskScheduler = new TaskScheduler.Builder()
                 .withLeaseOfferExpirySecs(1000000)
-                .withLeaseRejectAction(new Action1<VirtualMachineLease>() {
-                    @Override
-                    public void call(VirtualMachineLease virtualMachineLease) {
-                        System.out.println("Rejecting offer on host " + virtualMachineLease.hostname());
-                    }
+                .withLeaseRejectAction(virtualMachineLease -> {
+                    System.out.println("Rejecting offer on host " + virtualMachineLease.hostname());
                 })
                 .build();
         taskScheduler.setActiveVmGroupAttributeName(activeVmGrpAttrName);
@@ -85,15 +81,13 @@ public class ActiveVmGroupsTests {
     @Test
     public void testOffersRejectOnInactiveVMs() {
         final Set<String> hostsSet = new HashSet<>();
-        for(int i=0; i<10; i++)
-            hostsSet.add("host"+i);
+        for (int i = 0; i < 10; i++) {
+            hostsSet.add("host" + i);
+        }
         TaskScheduler ts = new TaskScheduler.Builder()
                 .withLeaseOfferExpirySecs(2)
-                .withLeaseRejectAction(new Action1<VirtualMachineLease>() {
-                    @Override
-                    public void call(VirtualMachineLease lease) {
-                        hostsSet.remove(lease.hostname());
-                    }
+                .withLeaseRejectAction(lease -> {
+                    hostsSet.remove(lease.hostname());
                 })
                 .build();
         ts.setActiveVmGroupAttributeName(activeVmGrpAttrName);
@@ -106,9 +100,9 @@ public class ActiveVmGroupsTests {
         }
         leases.add(LeaseProvider.getLeaseOffer("hostA", 4, 4000, ports, attributes1));
         leases.add(LeaseProvider.getLeaseOffer("hostB", 4, 4000, ports, attributes1));
-        ts.scheduleOnce(Collections.EMPTY_LIST, leases);
+        ts.scheduleOnce(Collections.emptyList(), leases);
         for(int i=0; i< 3; i++) {
-            ts.scheduleOnce(Collections.EMPTY_LIST, Collections.EMPTY_LIST);
+            ts.scheduleOnce(Collections.emptyList(), Collections.emptyList());
             System.out.println("...");
             try{Thread.sleep(1000);}catch(InterruptedException ie){}
         }
@@ -123,12 +117,9 @@ public class ActiveVmGroupsTests {
         final List<VirtualMachineLease> leases = LeaseProvider.getLeases(10, 4, 4000, 1, 10);
         TaskScheduler ts = new TaskScheduler.Builder()
                 .withLeaseOfferExpirySecs(2)
-                .withLeaseRejectAction(new Action1<VirtualMachineLease>() {
-                    @Override
-                    public void call(VirtualMachineLease virtualMachineLease) {
-                        hostsSet.add(virtualMachineLease.hostname());
-                        hostsToAdd.add(virtualMachineLease.hostname());
-                    }
+                .withLeaseRejectAction(virtualMachineLease -> {
+                    hostsSet.add(virtualMachineLease.hostname());
+                    hostsToAdd.add(virtualMachineLease.hostname());
                 })
                 .build();
         for(int i=0; i<9; i++) {
@@ -137,7 +128,7 @@ public class ActiveVmGroupsTests {
                     leases.add(LeaseProvider.getLeaseOffer(h, 4, 4000, 1, 10));
                 hostsToAdd.clear();
             }
-            ts.scheduleOnce(Collections.EMPTY_LIST, leases);
+            ts.scheduleOnce(Collections.emptyList(), leases);
             leases.clear();
             try{Thread.sleep(1000);}catch(InterruptedException ie){}
         }
@@ -151,12 +142,9 @@ public class ActiveVmGroupsTests {
         TaskScheduler scheduler = new TaskScheduler.Builder()
                 .withFitnessCalculator(BinPackingFitnessCalculators.cpuMemBinPacker)
                 .withLeaseOfferExpirySecs(100000000)
-                .withLeaseRejectAction(new Action1<VirtualMachineLease>() {
-                    @Override
-                    public void call(VirtualMachineLease virtualMachineLease) {
-                        Assert.fail("Unexpected to reject lease");
-                        //System.out.println("Rejecting lease on " + virtualMachineLease.hostname());
-                    }
+                .withLeaseRejectAction(virtualMachineLease -> {
+                    Assert.fail("Unexpected to reject lease");
+                    //System.out.println("Rejecting lease on " + virtualMachineLease.hostname());
                 })
                 .build();
         scheduler.setActiveVmGroupAttributeName("ASG");
@@ -171,21 +159,23 @@ public class ActiveVmGroupsTests {
                 .setType(Protos.Value.Type.TEXT)
                 .setText(Protos.Value.Text.newBuilder().setValue("8cores")).build();
         attributes.put("ASG", attribute);
-        for(int l=0; l<nHosts8core; l++)
-            leases.add(LeaseProvider.getLeaseOffer("host"+l, 8, 32000, 1024.0, ports, attributes));
+        for (int l = 0; l < nHosts8core; l++) {
+            leases.add(LeaseProvider.getLeaseOffer("host" + l, 8, 32000, 1024.0, ports, attributes));
+        }
         attributes = new HashMap<>();
         Protos.Attribute attribute2 = Protos.Attribute.newBuilder().setName("ASG")
                 .setType(Protos.Value.Type.TEXT)
                 .setText(Protos.Value.Text.newBuilder().setValue("16cores")).build();
         attributes.put("ASG", attribute2);
-        for(int l=0; l<nHosts16core; l++)
+        for (int l = 0; l < nHosts16core; l++) {
             leases.add(LeaseProvider.getLeaseOffer("bighost" + l, 16, 64000, 1024.0, ports, attributes));
+        }
         List<TaskRequest> tasks = Arrays.asList(TaskRequestProvider.getTaskRequest(1, 100, 1));
         SchedulingResult schedulingResult = scheduler.scheduleOnce(tasks, leases);
         Assert.assertEquals(1, schedulingResult.getResultMap().size());
         System.out.println("result map #elements: " + schedulingResult.getResultMap().size());
         Assert.assertEquals(0, schedulingResult.getFailures().size());
-        schedulingResult = scheduler.scheduleOnce(Arrays.asList(TaskRequestProvider.getTaskRequest(16, 1000, 1)), Collections.EMPTY_LIST);
+        schedulingResult = scheduler.scheduleOnce(Arrays.asList(TaskRequestProvider.getTaskRequest(16, 1000, 1)), Collections.emptyList());
         Assert.assertEquals(1, schedulingResult.getResultMap().size());
         System.out.println("result map #elements: " + schedulingResult.getResultMap().size());
         Assert.assertEquals(0, schedulingResult.getFailures().size());
