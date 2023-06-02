@@ -101,7 +101,7 @@ public class TestableVirtualMachineLease implements VirtualMachineLease {
 
     public static List<VirtualMachineLease> leasesWithIds(String... ids) {
         List<VirtualMachineLease> leases = new ArrayList<>(ids.length);
-        for (String id : ids) {
+        for (String id: ids) {
             leases.add(new TestableVirtualMachineLease(id));
         }
         return leases;

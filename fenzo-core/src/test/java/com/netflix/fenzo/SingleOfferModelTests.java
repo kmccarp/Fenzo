@@ -26,18 +26,19 @@ import java.util.*;
 
 public class SingleOfferModelTests {
     private TaskScheduler taskScheduler;
+
     @Before
     public void setUp() throws Exception {
         taskScheduler = new TaskScheduler.Builder()
-                .withLeaseOfferExpirySecs(1000000)
-                .withSingleOfferPerVM(true)
-                .withLeaseRejectAction(new Action1<VirtualMachineLease>() {
-                    @Override
-                    public void call(VirtualMachineLease virtualMachineLease) {
-                        System.out.println("Rejecting offer on host " + virtualMachineLease.hostname());
-                    }
-                })
-                .build();
+            .withLeaseOfferExpirySecs(1000000)
+            .withSingleOfferPerVM(true)
+            .withLeaseRejectAction(new Action1<VirtualMachineLease>() {
+                @Override
+                public void call(VirtualMachineLease virtualMachineLease) {
+                    System.out.println("Rejecting offer on host " + virtualMachineLease.hostname());
+                }
+            })
+            .build();
     }
 
     @After
@@ -49,7 +50,7 @@ public class SingleOfferModelTests {
         List<VirtualMachineLease> leases = LeaseProvider.getLeases(1, 4, 100, 1, 10);
         List<TaskRequest> taskRequests = new ArrayList<>();
         taskRequests.add(TaskRequestProvider.getTaskRequest(1, 10, 1));
-        Map<String,VMAssignmentResult> resultMap = taskScheduler.scheduleOnce(taskRequests, leases).getResultMap();
+        Map<String, VMAssignmentResult> resultMap = taskScheduler.scheduleOnce(taskRequests, leases).getResultMap();
         Assert.assertEquals(1, resultMap.size());
         taskScheduler.getTaskAssigner().call(taskRequests.get(0), resultMap.keySet().iterator().next());
         leases.clear();
@@ -60,8 +61,8 @@ public class SingleOfferModelTests {
         resultMap = taskScheduler.scheduleOnce(taskRequests, leases).getResultMap();
         Assert.assertEquals(1, resultMap.size());
         Assert.assertEquals(3, resultMap.entrySet().iterator().next().getValue().getTasksAssigned().size());
-        for(Map.Entry<String, VMAssignmentResult> entry: resultMap.entrySet()) {
-            for(TaskAssignmentResult r: entry.getValue().getTasksAssigned()) {
+        for (Map.Entry<String, VMAssignmentResult> entry: resultMap.entrySet()) {
+            for (TaskAssignmentResult r: entry.getValue().getTasksAssigned()) {
                 taskScheduler.getTaskAssigner().call(r.getRequest(), entry.getKey());
             }
         }
@@ -85,11 +86,11 @@ public class SingleOfferModelTests {
         taskRequests.add(TaskRequestProvider.getTaskRequest(1, 10, 1));
         taskRequests.add(TaskRequestProvider.getTaskRequest(1, 10, 1));
         taskRequests.add(TaskRequestProvider.getTaskRequest(1, 10, 1));
-        Map<String,VMAssignmentResult> resultMap = taskScheduler.scheduleOnce(taskRequests, leases).getResultMap();
+        Map<String, VMAssignmentResult> resultMap = taskScheduler.scheduleOnce(taskRequests, leases).getResultMap();
         Assert.assertEquals(1, resultMap.size());
         Assert.assertEquals(3, resultMap.entrySet().iterator().next().getValue().getTasksAssigned().size());
-        for(Map.Entry<String, VMAssignmentResult> entry: resultMap.entrySet()) {
-            for(TaskAssignmentResult r: entry.getValue().getTasksAssigned()) {
+        for (Map.Entry<String, VMAssignmentResult> entry: resultMap.entrySet()) {
+            for (TaskAssignmentResult r: entry.getValue().getTasksAssigned()) {
                 taskScheduler.getTaskAssigner().call(r.getRequest(), entry.getKey());
             }
         }
@@ -107,7 +108,7 @@ public class SingleOfferModelTests {
         host1 = LeaseProvider.getLeaseOffer("host1", 4, 4000, 1, 10);
         SchedulingResult result = taskScheduler.scheduleOnce(Collections.singletonList(taskRequest), Collections.singletonList(host1));
         final Map<String, VMAssignmentResult> resultMap = result.getResultMap();
-        for(Map.Entry<String, VMAssignmentResult> e: resultMap.entrySet()) {
+        for (Map.Entry<String, VMAssignmentResult> e: resultMap.entrySet()) {
             Assert.assertEquals(1, e.getValue().getLeasesUsed().size());
         }
     }

@@ -29,7 +29,7 @@ public abstract class AbstractInMemoryDao<T> {
 
     public static final String SEPARATOR = ":";
 
-    private final ConcurrentMap<String, ConcurrentMap<String,T>> map = new ConcurrentHashMap<String, ConcurrentMap<String,T>>();
+    private final ConcurrentMap<String, ConcurrentMap<String, T>> map = new ConcurrentHashMap<String, ConcurrentMap<String, T>>();
     private final String idSeparator;
 
     protected AbstractInMemoryDao() {
@@ -81,7 +81,7 @@ public abstract class AbstractInMemoryDao<T> {
      */
     protected T read(String group, String id) {
         ConcurrentMap<String, T> subMap = map.get(group);
-        for (Iterator<String> iterator2 = subMap.keySet().iterator(); iterator2.hasNext();) {
+        for (Iterator<String> iterator2 = subMap.keySet().iterator(); iterator2.hasNext(); ) {
             String storedId = iterator2.next();
             if (id.equals(storedId)) {
                 return subMap.get(id);
@@ -134,7 +134,7 @@ public abstract class AbstractInMemoryDao<T> {
      */
     protected List<T> list() {
         List<T> items = new ArrayList<>();
-        for (Iterator<String> iterator = map.keySet().iterator(); iterator.hasNext();) {
+        for (Iterator<String> iterator = map.keySet().iterator(); iterator.hasNext(); ) {
             items.addAll(map.get(iterator.next()).values());
         }
         return items;
@@ -171,7 +171,8 @@ public abstract class AbstractInMemoryDao<T> {
         String[] tokens = columnName.split(idSeparator);
         if (tokens.length == 2) {
             return tokens[0];
-        } else {
+        }
+        else {
             throw new IllegalArgumentException(String.format("Cannot extract row key from column name string: %s", columnName));
         }
     }

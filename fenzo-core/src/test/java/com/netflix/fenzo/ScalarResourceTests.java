@@ -31,15 +31,15 @@ public class ScalarResourceTests {
 
     private TaskScheduler getScheduler(boolean singleLeaseMode) {
         return new TaskScheduler.Builder()
-                .withLeaseOfferExpirySecs(1000000)
-                .withSingleOfferPerVM(singleLeaseMode)
-                .withLeaseRejectAction(new Action1<VirtualMachineLease>() {
-                    @Override
-                    public void call(VirtualMachineLease virtualMachineLease) {
-                        System.out.println("Rejecting offer on host " + virtualMachineLease.hostname());
-                    }
-                })
-                .build();
+            .withLeaseOfferExpirySecs(1000000)
+            .withSingleOfferPerVM(singleLeaseMode)
+            .withLeaseRejectAction(new Action1<VirtualMachineLease>() {
+                @Override
+                public void call(VirtualMachineLease virtualMachineLease) {
+                    System.out.println("Rejecting offer on host " + virtualMachineLease.hostname());
+                }
+            })
+            .build();
     }
 
     // Test that asking for a scalar resource gets the task assigned
@@ -50,7 +50,7 @@ public class ScalarResourceTests {
         scalars.put("gpu", 1.0);
         final TaskRequest task = TaskRequestProvider.getTaskRequest(null, 1, 100, 1, 1, 1, null, null, null, scalars);
         final VirtualMachineLease host1 = LeaseProvider.getLeaseOffer("host1", 4.0, 4000.0, 100, 1024,
-                Collections.singletonList(new VirtualMachineLease.Range(1, 10)), null, scalars);
+            Collections.singletonList(new VirtualMachineLease.Range(1, 10)), null, scalars);
         final SchedulingResult result = scheduler.scheduleOnce(Collections.singletonList(task), Collections.singletonList(host1));
         Assert.assertEquals(0, result.getFailures().size());
         Assert.assertEquals(1, result.getResultMap().size());
@@ -61,10 +61,10 @@ public class ScalarResourceTests {
     @Test
     public void testInsufficientScalarResources() throws Exception {
         final TaskScheduler scheduler = getScheduler();
-        final double scalarsOnHost=4.0;
-        final TaskRequest task = TaskRequestProvider.getTaskRequest(null, 1, 100, 1, 1, 1, null, null, null, Collections.singletonMap("gpu", scalarsOnHost+1.0));
+        final double scalarsOnHost = 4.0;
+        final TaskRequest task = TaskRequestProvider.getTaskRequest(null, 1, 100, 1, 1, 1, null, null, null, Collections.singletonMap("gpu", scalarsOnHost + 1.0));
         final VirtualMachineLease host1 = LeaseProvider.getLeaseOffer("host1", 4.0, 4000.0, 100, 1024,
-                Collections.singletonList(new VirtualMachineLease.Range(1, 10)), null, Collections.singletonMap("gpu", scalarsOnHost));
+            Collections.singletonList(new VirtualMachineLease.Range(1, 10)), null, Collections.singletonMap("gpu", scalarsOnHost));
         final SchedulingResult result = scheduler.scheduleOnce(Collections.singletonList(task), Collections.singletonList(host1));
         Assert.assertEquals(1, result.getFailures().size());
         Assert.assertEquals(0, result.getResultMap().size());
@@ -79,12 +79,12 @@ public class ScalarResourceTests {
         final List<TaskRequest> tasks = new ArrayList<>();
         for (int i = 0; i < scalarsOnHost + 1; i++)
             tasks.add(TaskRequestProvider.getTaskRequest(null, 1, 100, 1, 1, 1, null, null, null, Collections.singletonMap("gpu", 1.0)));
-        final VirtualMachineLease host1 = LeaseProvider.getLeaseOffer("host1", scalarsOnHost*2.0, scalarsOnHost*2000.0, 100, 1024,
-                Collections.singletonList(new VirtualMachineLease.Range(1, 10)), null, Collections.singletonMap("gpu", scalarsOnHost));
+        final VirtualMachineLease host1 = LeaseProvider.getLeaseOffer("host1", scalarsOnHost * 2.0, scalarsOnHost * 2000.0, 100, 1024,
+            Collections.singletonList(new VirtualMachineLease.Range(1, 10)), null, Collections.singletonMap("gpu", scalarsOnHost));
         final SchedulingResult result = scheduler.scheduleOnce(tasks, Collections.singletonList(host1));
         Assert.assertEquals(1, result.getFailures().size());
         Assert.assertEquals(1, result.getResultMap().size());
-        Assert.assertEquals((int)scalarsOnHost, result.getResultMap().values().iterator().next().getTasksAssigned().size());
+        Assert.assertEquals((int) scalarsOnHost, result.getResultMap().values().iterator().next().getTasksAssigned().size());
         Assert.assertEquals(VMResource.Other, result.getFailures().values().iterator().next().get(0).getFailures().get(0).getResource());
     }
 
@@ -95,15 +95,15 @@ public class ScalarResourceTests {
         final List<TaskRequest> tasks = new ArrayList<>();
         for (int i = 0; i < scalarsOnHost * 2; i++)
             tasks.add(TaskRequestProvider.getTaskRequest(null, 1, 100, 1, 1, 1, null, null, null, Collections.singletonMap("gpu", 1.0)));
-        final VirtualMachineLease host1 = LeaseProvider.getLeaseOffer("host1", scalarsOnHost, scalarsOnHost*1000.0, 100, 1024,
-                Collections.singletonList(new VirtualMachineLease.Range(1, 10)), null, Collections.singletonMap("gpu", scalarsOnHost));
-        final VirtualMachineLease host2 = LeaseProvider.getLeaseOffer("host2", scalarsOnHost, scalarsOnHost*1000.0, 100, 1024,
-                Collections.singletonList(new VirtualMachineLease.Range(1, 10)), null, Collections.singletonMap("gpu", scalarsOnHost));
+        final VirtualMachineLease host1 = LeaseProvider.getLeaseOffer("host1", scalarsOnHost, scalarsOnHost * 1000.0, 100, 1024,
+            Collections.singletonList(new VirtualMachineLease.Range(1, 10)), null, Collections.singletonMap("gpu", scalarsOnHost));
+        final VirtualMachineLease host2 = LeaseProvider.getLeaseOffer("host2", scalarsOnHost, scalarsOnHost * 1000.0, 100, 1024,
+            Collections.singletonList(new VirtualMachineLease.Range(1, 10)), null, Collections.singletonMap("gpu", scalarsOnHost));
         final SchedulingResult result = scheduler.scheduleOnce(tasks, Arrays.asList(host1, host2));
         Assert.assertEquals(0, result.getFailures().size());
         Assert.assertEquals(2, result.getResultMap().size());
-        int tasksAssigned=0;
-        for(VMAssignmentResult r: result.getResultMap().values()) {
+        int tasksAssigned = 0;
+        for (VMAssignmentResult r: result.getResultMap().values()) {
             tasksAssigned += r.getTasksAssigned().size();
         }
         Assert.assertEquals(tasks.size(), tasksAssigned);
@@ -119,32 +119,32 @@ public class ScalarResourceTests {
         scalarReqs.put("gpu", 1.0);
         scalarReqs.put("foo", 1.0);
         final List<TaskRequest> tasks = new ArrayList<>();
-        for(int i=0; i<scalars1OnHost*2; i++)
+        for (int i = 0; i < scalars1OnHost * 2; i++)
             tasks.add(TaskRequestProvider.getTaskRequest(null, 1, 100, 1, 1, 1, null, null, null, scalarReqs));
         final Map<String, Double> scalarResources = new HashMap<>();
         scalarResources.put("gpu", scalars1OnHost);
         scalarResources.put("foo", scalars2OnHost);
-        final VirtualMachineLease host1 = LeaseProvider.getLeaseOffer("host1", scalars1OnHost*2.0, scalars1OnHost*2000.0, 100, 1024,
-                Collections.singletonList(new VirtualMachineLease.Range(1, 10)), null, scalarResources);
-        final VirtualMachineLease host2 = LeaseProvider.getLeaseOffer("host2", scalars1OnHost*2.0, scalars1OnHost*2000.0, 100, 1024,
-                Collections.singletonList(new VirtualMachineLease.Range(1, 10)), null, scalarResources);
+        final VirtualMachineLease host1 = LeaseProvider.getLeaseOffer("host1", scalars1OnHost * 2.0, scalars1OnHost * 2000.0, 100, 1024,
+            Collections.singletonList(new VirtualMachineLease.Range(1, 10)), null, scalarResources);
+        final VirtualMachineLease host2 = LeaseProvider.getLeaseOffer("host2", scalars1OnHost * 2.0, scalars1OnHost * 2000.0, 100, 1024,
+            Collections.singletonList(new VirtualMachineLease.Range(1, 10)), null, scalarResources);
         final SchedulingResult result = scheduler.scheduleOnce(tasks, Arrays.asList(host1, host2));
-        Assert.assertEquals((int)(scalars1OnHost/scalars2OnHost)*2, result.getFailures().size());
+        Assert.assertEquals((int) (scalars1OnHost / scalars2OnHost) * 2, result.getFailures().size());
         Assert.assertEquals(2, result.getResultMap().size());
-        int tasksAssigned=0;
-        for(VMAssignmentResult r: result.getResultMap().values()) {
+        int tasksAssigned = 0;
+        for (VMAssignmentResult r: result.getResultMap().values()) {
             tasksAssigned += r.getTasksAssigned().size();
         }
-        Assert.assertEquals((int)(scalars2OnHost*2.0), tasksAssigned);
+        Assert.assertEquals((int) (scalars2OnHost * 2.0), tasksAssigned);
     }
 
     @Test
     public void testInsufficientScalarResourcesWithSingleLeaseMode() {
         final TaskScheduler scheduler = getScheduler(true);
-        final double scalarsOnHost=4.0;
-        final TaskRequest task = TaskRequestProvider.getTaskRequest(null, 1, 100, 1, 1, 1, null, null, null, Collections.singletonMap("gpu", scalarsOnHost+1.0));
+        final double scalarsOnHost = 4.0;
+        final TaskRequest task = TaskRequestProvider.getTaskRequest(null, 1, 100, 1, 1, 1, null, null, null, Collections.singletonMap("gpu", scalarsOnHost + 1.0));
         final VirtualMachineLease host1 = LeaseProvider.getLeaseOffer("host1", 4.0, 4000.0, 100, 1024,
-                Collections.singletonList(new VirtualMachineLease.Range(1, 10)), null, Collections.singletonMap("gpu", scalarsOnHost));
+            Collections.singletonList(new VirtualMachineLease.Range(1, 10)), null, Collections.singletonMap("gpu", scalarsOnHost));
         final SchedulingResult result = scheduler.scheduleOnce(Collections.singletonList(task), Collections.singletonList(host1));
         Assert.assertEquals(1, result.getFailures().size());
         Assert.assertEquals(0, result.getResultMap().size());
@@ -157,10 +157,10 @@ public class ScalarResourceTests {
         final TaskScheduler scheduler = getScheduler(true);
 
         final TaskRequest task = TaskRequestProvider.getTaskRequest(null, 1, 1, 1,
-                1, 1, null, null, null, Collections.emptyMap());
+            1, 1, null, null, null, Collections.emptyMap());
 
         final VirtualMachineLease lease1 = LeaseProvider.getLeaseOffer("host1", 1.0, 1.0, 1, 1,
-                Collections.singletonList(new VirtualMachineLease.Range(1, 10)), null, Collections.emptyMap());
+            Collections.singletonList(new VirtualMachineLease.Range(1, 10)), null, Collections.emptyMap());
 
         final SchedulingResult result1 = scheduler.scheduleOnce(Collections.singletonList(task), Collections.singletonList(lease1));
         Assert.assertEquals(0, result1.getFailures().size());

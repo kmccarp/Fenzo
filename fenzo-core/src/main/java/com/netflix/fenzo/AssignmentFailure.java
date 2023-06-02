@@ -51,12 +51,12 @@ public class AssignmentFailure {
     private final String message;
 
     @JsonCreator
-    @JsonIgnoreProperties(ignoreUnknown=true)
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public AssignmentFailure(@JsonProperty("resource") VMResource resource,
-                             @JsonProperty("asking") double asking,
-                             @JsonProperty("used") double used,
-                             @JsonProperty("available") double available,
-                             @JsonProperty("message") String message
+        @JsonProperty("asking") double asking,
+        @JsonProperty("used") double used,
+        @JsonProperty("available") double available,
+        @JsonProperty("message") String message
     ) {
         this.resource = resource;
         this.asking = asking;
@@ -119,11 +119,11 @@ public class AssignmentFailure {
     @Override
     public String toString() {
         return "AssignmentFailure{" +
-                "resource=" + resource +
-                ", asking=" + asking +
-                ", used=" + used +
-                ", available=" + available +
-                ", message=" + message +
-                '}';
+            "resource=" + resource +
+            ", asking=" + asking +
+            ", used=" + used +
+            ", available=" + available +
+            ", message=" + message +
+            '}';
     }
 }

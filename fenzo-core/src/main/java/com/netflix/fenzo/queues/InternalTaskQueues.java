@@ -22,7 +22,7 @@ public class InternalTaskQueues {
 
     public static InternalTaskQueue createQueueOf(TaskQueue queue) {
         if (queue instanceof TieredQueue) {
-            return new TieredQueue(((TieredQueue)queue).getNumTiers());
+            return new TieredQueue(((TieredQueue) queue).getNumTiers());
         }
         throw new IllegalArgumentException("Unknown queue implementation: " + queue.getClass().getName());
     }

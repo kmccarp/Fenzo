@@ -77,7 +77,7 @@ public class SampleFramework {
          */
         @Override
         public void resourceOffers(SchedulerDriver driver, List<Protos.Offer> offers) {
-            for(Protos.Offer offer: offers) {
+            for (Protos.Offer offer: offers) {
                 System.out.println("Adding offer " + offer.getId() + " from host " + offer.getHostname());
                 leasesQueue.offer(new VMLeaseObject(offer));
             }
@@ -112,10 +112,12 @@ public class SampleFramework {
         }
 
         @Override
-        public void frameworkMessage(SchedulerDriver driver, Protos.ExecutorID executorId, Protos.SlaveID slaveId, byte[] data) {}
+        public void frameworkMessage(SchedulerDriver driver, Protos.ExecutorID executorId, Protos.SlaveID slaveId, byte[] data) {
+        }
 
         @Override
-        public void disconnected(SchedulerDriver driver) {}
+        public void disconnected(SchedulerDriver driver) {
+        }
 
         /**
          * Upon slave lost notification, tell Fenzo scheduler to expire all leases with the given slave ID. Note, however,
@@ -138,7 +140,8 @@ public class SampleFramework {
         }
 
         @Override
-        public void error(SchedulerDriver driver, String message) {}
+        public void error(SchedulerDriver driver, String message) {
+        }
     }
 
     private final BlockingQueue<TaskRequest> taskQueue;
@@ -168,26 +171,26 @@ public class SampleFramework {
      *                      passed as the only argument.
      */
     public SampleFramework(BlockingQueue<TaskRequest> taskQueue, String mesosMaster, Action1<String> onTaskComplete,
-                           Func1<String, String> taskCmdGetter) {
+        Func1<String, String> taskCmdGetter) {
         this.taskQueue = taskQueue;
         this.leasesQueue = new LinkedBlockingQueue<>();
         this.onTaskComplete = onTaskComplete;
         this.taskCmdGetter = taskCmdGetter;
         launchedTasks = new HashMap<>();
         scheduler = new TaskScheduler.Builder()
-                .withLeaseOfferExpirySecs(1000000000)
-                .withLeaseRejectAction(new Action1<VirtualMachineLease>() {
-                    @Override
-                    public void call(VirtualMachineLease lease) {
-                        System.out.println("Declining offer on " + lease.hostname());
-                        ref.get().declineOffer(lease.getOffer().getId());
-                    }
-                })
-                .build();
+            .withLeaseOfferExpirySecs(1000000000)
+            .withLeaseRejectAction(new Action1<VirtualMachineLease>() {
+                @Override
+                public void call(VirtualMachineLease lease) {
+                    System.out.println("Declining offer on " + lease.hostname());
+                    ref.get().declineOffer(lease.getOffer().getId());
+                }
+            })
+            .build();
         Protos.FrameworkInfo framework = Protos.FrameworkInfo.newBuilder()
-                .setName("Sample Fenzo Framework")
-                .setUser("")
-                .build();
+            .setName("Sample Fenzo Framework")
+            .setUser("")
+            .build();
         Scheduler mesosScheduler = new MesosScheduler();
         mesosSchedulerDriver = new MesosSchedulerDriver(mesosScheduler, framework, mesosMaster);
         ref.set(mesosSchedulerDriver);
@@ -233,38 +236,38 @@ public class SampleFramework {
     void runAll() {
         System.out.println("Running all");
         List<VirtualMachineLease> newLeases = new ArrayList<>();
-        while(true) {
-            if(isShutdown.get())
+        while (true) {
+            if (isShutdown.get())
                 return;
             newLeases.clear();
             List<TaskRequest> newTaskRequests = new ArrayList<>();
             System.out.println("#Pending tasks: " + pendingTasksMap.size());
-            TaskRequest taskRequest=null;
+            TaskRequest taskRequest = null;
             try {
-                taskRequest = pendingTasksMap.size()==0?
-                        taskQueue.poll(5, TimeUnit.SECONDS) :
-                        taskQueue.poll(1, TimeUnit.MILLISECONDS);
+                taskRequest = pendingTasksMap.size() == 0 ?
+                    taskQueue.poll(5, TimeUnit.SECONDS) :
+                    taskQueue.poll(1, TimeUnit.MILLISECONDS);
             }
             catch (InterruptedException ie) {
                 System.err.println("Error polling task queue: " + ie.getMessage());
             }
-            if(taskRequest!=null) {
+            if (taskRequest != null) {
                 taskQueue.drainTo(newTaskRequests);
                 newTaskRequests.add(0, taskRequest);
-                for(TaskRequest request: newTaskRequests)
+                for (TaskRequest request: newTaskRequests)
                     pendingTasksMap.put(request.getId(), request);
             }
             leasesQueue.drainTo(newLeases);
             SchedulingResult schedulingResult = scheduler.scheduleOnce(new ArrayList<>(pendingTasksMap.values()), newLeases);
             System.out.println("result=" + schedulingResult);
-            Map<String,VMAssignmentResult> resultMap = schedulingResult.getResultMap();
-            if(!resultMap.isEmpty()) {
-                for(VMAssignmentResult result: resultMap.values()) {
+            Map<String, VMAssignmentResult> resultMap = schedulingResult.getResultMap();
+            if (!resultMap.isEmpty()) {
+                for (VMAssignmentResult result: resultMap.values()) {
                     List<VirtualMachineLease> leasesUsed = result.getLeasesUsed();
                     List<Protos.TaskInfo> taskInfos = new ArrayList<>();
                     StringBuilder stringBuilder = new StringBuilder("Launching on VM " + leasesUsed.get(0).hostname() + " tasks ");
                     final Protos.SlaveID slaveId = leasesUsed.get(0).getOffer().getSlaveId();
-                    for(TaskAssignmentResult t: result.getTasksAssigned()) {
+                    for (TaskAssignmentResult t: result.getTasksAssigned()) {
                         stringBuilder.append(t.getTaskId()).append(", ");
                         taskInfos.add(getTaskInfo(slaveId, t.getTaskId(), taskCmdGetter.call(t.getTaskId())));
                         // unqueueTask task from pending tasks map and put into launched tasks map
@@ -274,34 +277,37 @@ public class SampleFramework {
                         scheduler.getTaskAssigner().call(t.getRequest(), leasesUsed.get(0).hostname());
                     }
                     List<Protos.OfferID> offerIDs = new ArrayList<>();
-                    for(VirtualMachineLease l: leasesUsed)
+                    for (VirtualMachineLease l: leasesUsed)
                         offerIDs.add(l.getOffer().getId());
                     System.out.println(stringBuilder.toString());
                     mesosSchedulerDriver.launchTasks(offerIDs, taskInfos);
                 }
             }
             // insert a short delay before scheduling any new tasks or tasks from before that haven't been launched yet.
-            try{Thread.sleep(100);}catch(InterruptedException ie){}
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ie) {
+            }
         }
     }
 
     static Protos.TaskInfo getTaskInfo(Protos.SlaveID slaveID, final String taskId, String cmd) {
         Protos.TaskID pTaskId = Protos.TaskID.newBuilder()
-                .setValue(taskId).build();
+            .setValue(taskId).build();
         return Protos.TaskInfo.newBuilder()
-                .setName("task " + pTaskId.getValue())
-                .setTaskId(pTaskId)
-                .setSlaveId(slaveID)
-                .addResources(Protos.Resource.newBuilder()
-                        .setName("cpus")
-                        .setType(Protos.Value.Type.SCALAR)
-                        .setScalar(Protos.Value.Scalar.newBuilder().setValue(1)))
-                .addResources(Protos.Resource.newBuilder()
-                        .setName("mem")
-                        .setType(Protos.Value.Type.SCALAR)
-                        .setScalar(Protos.Value.Scalar.newBuilder().setValue(128)))
-                .setCommand(Protos.CommandInfo.newBuilder().setValue(cmd).build())
-                .build();
+            .setName("task " + pTaskId.getValue())
+            .setTaskId(pTaskId)
+            .setSlaveId(slaveID)
+            .addResources(Protos.Resource.newBuilder()
+                .setName("cpus")
+                .setType(Protos.Value.Type.SCALAR)
+                .setScalar(Protos.Value.Scalar.newBuilder().setValue(1)))
+            .addResources(Protos.Resource.newBuilder()
+                .setName("mem")
+                .setType(Protos.Value.Type.SCALAR)
+                .setScalar(Protos.Value.Scalar.newBuilder().setValue(128)))
+            .setCommand(Protos.CommandInfo.newBuilder().setValue(cmd).build())
+            .build();
     }
 
 }

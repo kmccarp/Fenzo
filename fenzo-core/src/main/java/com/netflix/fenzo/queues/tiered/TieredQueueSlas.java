@@ -30,14 +30,14 @@ public class TieredQueueSlas implements TaskQueueSla {
         Map<Integer, TierSla> tmpResAllocsMap = new HashMap<>();
 
         if (!slas.isEmpty()) {
-            for (Map.Entry<Integer, Map<String, ResAllocs>> entry : slas.entrySet()) {
+            for (Map.Entry<Integer, Map<String, ResAllocs>> entry: slas.entrySet()) {
                 int tierNumber = entry.getKey();
                 final Map<String, ResAllocs> tierAllocs = entry.getValue();
 
                 TierSla tierSla = new TierSla();
                 tierSla.setTierCapacity(getOrComputeTierCapacity(tierNumber, tierCapacities.get(tierNumber), tierAllocs));
 
-                for (Map.Entry<String, ResAllocs> e : tierAllocs.entrySet()) {
+                for (Map.Entry<String, ResAllocs> e: tierAllocs.entrySet()) {
                     tierSla.setAlloc(e.getKey(), e.getValue());
                 }
 

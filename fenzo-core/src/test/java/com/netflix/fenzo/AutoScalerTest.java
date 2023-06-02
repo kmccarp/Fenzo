@@ -63,26 +63,26 @@ public class AutoScalerTest {
 
     /* package */
     static TaskScheduler getScheduler(final Action1<VirtualMachineLease> leaseRejectCalback, final Action1<AutoScaleAction> callback,
-                                      long delayScaleUpBySecs, long delayScaleDownByDecs,
-                                      AutoScaleRule... rules) {
+        long delayScaleUpBySecs, long delayScaleDownByDecs,
+        AutoScaleRule... rules) {
         TaskScheduler.Builder builder = new TaskScheduler.Builder()
-                .withAutoScaleByAttributeName(hostAttrName);
-        for (AutoScaleRule rule : rules)
+            .withAutoScaleByAttributeName(hostAttrName);
+        for (AutoScaleRule rule: rules)
             builder.withAutoScaleRule(rule);
         if (callback != null)
             builder.withAutoScalerCallback(callback);
         return builder
-                .withDelayAutoscaleDownBySecs(delayScaleDownByDecs)
-                .withDelayAutoscaleUpBySecs(delayScaleUpBySecs)
-                .withFitnessCalculator(BinPackingFitnessCalculators.cpuMemBinPacker)
-                .withLeaseOfferExpirySecs(3600)
-                .withLeaseRejectAction(lease -> {
-                    if (leaseRejectCalback == null)
-                        Assert.fail("Unexpected to reject lease " + lease.hostname());
-                    else
-                        leaseRejectCalback.call(lease);
-                })
-                .build();
+            .withDelayAutoscaleDownBySecs(delayScaleDownByDecs)
+            .withDelayAutoscaleUpBySecs(delayScaleUpBySecs)
+            .withFitnessCalculator(BinPackingFitnessCalculators.cpuMemBinPacker)
+            .withLeaseOfferExpirySecs(3600)
+            .withLeaseRejectAction(lease -> {
+                if (leaseRejectCalback == null)
+                    Assert.fail("Unexpected to reject lease " + lease.hostname());
+                else
+                    leaseRejectCalback.call(lease);
+            })
+            .build();
     }
 
     @Before
@@ -104,7 +104,7 @@ public class AutoScalerTest {
     }
 
     private TaskScheduler getScheduler(final Action1<VirtualMachineLease> leaseRejectCalback, final Action1<AutoScaleAction> callback,
-                                       AutoScaleRule... rules) {
+        AutoScaleRule... rules) {
         return getScheduler(leaseRejectCalback, callback, 0, 0, rules);
     }
 
@@ -180,7 +180,7 @@ public class AutoScalerTest {
             Map<String, VMAssignmentResult> resultMap = schedulingResult.getResultMap();
             if (added) {
                 int count = 0;
-                for (VMAssignmentResult result : resultMap.values())
+                for (VMAssignmentResult result: resultMap.values())
                     count += result.getTasksAssigned().size();
                 Assert.assertEquals(requests.size(), count);
                 requests.clear();
@@ -241,8 +241,8 @@ public class AutoScalerTest {
         ports.add(new VirtualMachineLease.Range(1, 10));
         Map<String, Protos.Attribute> attributes = new HashMap<>();
         Protos.Attribute attribute = Protos.Attribute.newBuilder().setName(hostAttrName)
-                .setType(Protos.Value.Type.TEXT)
-                .setText(Protos.Value.Text.newBuilder().setValue(hostAttrVal2)).build();
+            .setType(Protos.Value.Type.TEXT)
+            .setText(Protos.Value.Text.newBuilder().setValue(hostAttrVal2)).build();
         attributes.put(hostAttrName, attribute);
         for (int l = 0; l < maxIdle; l++) {
             leases.add(LeaseProvider.getLeaseOffer("host" + l, 8, 8000, ports, attributes));
@@ -255,7 +255,7 @@ public class AutoScalerTest {
         } while (i++ < coolDownSecs + 2 && latch.getCount() > 0);
         if (latch.getCount() < 1)
             Assert.fail("Scale up action received for " + rule2.getRuleName() + " rule, was expecting only on "
-                    + rule1.getRuleName());
+                + rule1.getRuleName());
     }
 
     /**
@@ -285,8 +285,8 @@ public class AutoScalerTest {
         ports.add(new VirtualMachineLease.Range(1, 10));
         Map<String, Protos.Attribute> attributes = new HashMap<>();
         Protos.Attribute attribute = Protos.Attribute.newBuilder().setName(hostAttrName)
-                .setType(Protos.Value.Type.TEXT)
-                .setText(Protos.Value.Text.newBuilder().setValue(hostAttrVal1)).build();
+            .setType(Protos.Value.Type.TEXT)
+            .setText(Protos.Value.Text.newBuilder().setValue(hostAttrVal1)).build();
         attributes.put(hostAttrName, attribute);
         int excess = 3;
         for (int l = 0; l < maxIdle + excess; l++) {
@@ -336,13 +336,13 @@ public class AutoScalerTest {
         ports.add(new VirtualMachineLease.Range(1, 10));
         Map<String, Protos.Attribute> attributes1 = new HashMap<>();
         Protos.Attribute attribute = Protos.Attribute.newBuilder().setName(hostAttrName)
-                .setType(Protos.Value.Type.TEXT)
-                .setText(Protos.Value.Text.newBuilder().setValue(hostAttrVal1)).build();
+            .setType(Protos.Value.Type.TEXT)
+            .setText(Protos.Value.Text.newBuilder().setValue(hostAttrVal1)).build();
         attributes1.put(hostAttrName, attribute);
         Map<String, Protos.Attribute> attributes2 = new HashMap<>();
         Protos.Attribute attribute2 = Protos.Attribute.newBuilder().setName(hostAttrName)
-                .setType(Protos.Value.Type.TEXT)
-                .setText(Protos.Value.Text.newBuilder().setValue(hostAttrVal2)).build();
+            .setType(Protos.Value.Type.TEXT)
+            .setText(Protos.Value.Text.newBuilder().setValue(hostAttrVal2)).build();
         attributes2.put(hostAttrName, attribute2);
         for (int l = 0; l < maxIdle + 3; l++) {
             leases.add(LeaseProvider.getLeaseOffer("host" + l, cpus1, memory1, ports, attributes1));
@@ -361,7 +361,7 @@ public class AutoScalerTest {
         } while (i++ < coolDownSecs + 2 && latch.getCount() > 0);
         if (latch.getCount() < 1)
             Assert.fail("Scale down action received for " + wrongScaleDownRulename + " rule, was expecting only on "
-                    + rule1.getRuleName());
+                + rule1.getRuleName());
     }
 
     // Tests that when scaling down, a balance is achieved across hosts for the given attribute. That is, about equal
@@ -384,24 +384,24 @@ public class AutoScalerTest {
         final List<VirtualMachineLease> leases = new ArrayList<>();
         final AutoScaleRule rule = AutoScaleRuleProvider.createRule(hostAttrVal1, 3, mxIdl, coolDownSecs, cpus1 / 2, memory1 / 2);
         final TaskScheduler scheduler = new TaskScheduler.Builder()
-                .withAutoScaleByAttributeName(hostAttrName)
-                .withAutoScaleDownBalancedByAttributeName(zoneAttrName)
-                .withFitnessCalculator(BinPackingFitnessCalculators.cpuBinPacker)
-                .withLeaseOfferExpirySecs(3600)
-                .withLeaseRejectAction(new Action1<VirtualMachineLease>() {
-                    @Override
-                    public void call(VirtualMachineLease lease) {
-                        //System.out.println("Rejecting lease on " + lease.hostname());
-                    }
-                })
-                .withAutoScaleRule(rule)
-                .build();
+            .withAutoScaleByAttributeName(hostAttrName)
+            .withAutoScaleDownBalancedByAttributeName(zoneAttrName)
+            .withFitnessCalculator(BinPackingFitnessCalculators.cpuBinPacker)
+            .withLeaseOfferExpirySecs(3600)
+            .withLeaseRejectAction(new Action1<VirtualMachineLease>() {
+                @Override
+                public void call(VirtualMachineLease lease) {
+                    //System.out.println("Rejecting lease on " + lease.hostname());
+                }
+            })
+            .withAutoScaleRule(rule)
+            .build();
         scheduler.setAutoscalerCallback(new Action1<AutoScaleAction>() {
             @Override
             public void call(AutoScaleAction action) {
                 if (action.getType() == AutoScaleAction.Type.Down) {
                     final Collection<String> hosts = ((ScaleDownAction) action).getHosts();
-                    for (String h : hosts) {
+                    for (String h: hosts) {
                         int zoneNum = Integer.parseInt(h.substring("host".length())) % 3;
                         //System.out.println("Scaling down host " + h);
                         zoneCounts[zoneNum]--;
@@ -416,13 +416,13 @@ public class AutoScalerTest {
         // create three attributes, each with unique zone value
         List<Map<String, Protos.Attribute>> attributes = new ArrayList<>(3);
         Protos.Attribute attr = Protos.Attribute.newBuilder().setName(hostAttrName)
-                .setType(Protos.Value.Type.TEXT)
-                .setText(Protos.Value.Text.newBuilder().setValue(hostAttrVal1)).build();
+            .setType(Protos.Value.Type.TEXT)
+            .setText(Protos.Value.Text.newBuilder().setValue(hostAttrVal1)).build();
         for (int i = 0; i < 3; i++) {
             attributes.add(new HashMap<String, Protos.Attribute>());
             Protos.Attribute attribute = Protos.Attribute.newBuilder().setName(zoneAttrName)
-                    .setType(Protos.Value.Type.TEXT)
-                    .setText(Protos.Value.Text.newBuilder().setValue("" + i)).build();
+                .setType(Protos.Value.Type.TEXT)
+                .setText(Protos.Value.Text.newBuilder().setValue("" + i)).build();
             attributes.get(i).put(zoneAttrName, attribute);
             attributes.get(i).put(hostAttrName, attr);
         }
@@ -440,7 +440,7 @@ public class AutoScalerTest {
 //                    schedulingResult.getLeasesAdded() + ", #totalVms=" + schedulingResult.getTotalVMsCount());
 //            System.out.println("#leasesRejected=" + schedulingResult.getLeasesRejected());
             final Map<String, VMAssignmentResult> resultMap = schedulingResult.getResultMap();
-            for (Map.Entry<String, VMAssignmentResult> entry : resultMap.entrySet()) {
+            for (Map.Entry<String, VMAssignmentResult> entry: resultMap.entrySet()) {
                 final int zn = Integer.parseInt(entry.getValue().getLeasesUsed().get(0).getAttributeMap().get(zoneAttrName).getText().getValue());
                 zoneCounts[zn]--;
             }
@@ -452,7 +452,7 @@ public class AutoScalerTest {
         } while (i++ < coolDownSecs + 2 && latch.getCount() > 0);
         if (latch.getCount() > 0)
             Assert.fail("Didn't get scale down");
-        for (int zoneCount : zoneCounts) {
+        for (int zoneCount: zoneCounts) {
             Assert.assertEquals(4, zoneCount);
         }
     }
@@ -475,8 +475,8 @@ public class AutoScalerTest {
         ports.add(new VirtualMachineLease.Range(1, 10));
         Map<String, Protos.Attribute> attributes1 = new HashMap<>();
         Protos.Attribute attribute = Protos.Attribute.newBuilder().setName(hostAttrName)
-                .setType(Protos.Value.Type.TEXT)
-                .setText(Protos.Value.Text.newBuilder().setValue(hostAttrVal1)).build();
+            .setType(Protos.Value.Type.TEXT)
+            .setText(Protos.Value.Text.newBuilder().setValue(hostAttrVal1)).build();
         attributes1.put(hostAttrName, attribute);
         int excess = 3;
         for (int l = 0; l < maxIdle + excess; l++) {
@@ -505,14 +505,14 @@ public class AutoScalerTest {
         Assert.assertEquals(0, latch.getCount());
         final List<VirtualMachineCurrentState> vmCurrentStates = scheduler.getVmCurrentStates();
         long now = System.currentTimeMillis();
-        for (VirtualMachineCurrentState s : vmCurrentStates) {
+        for (VirtualMachineCurrentState s: vmCurrentStates) {
             if (s.getDisabledUntil() > 0)
                 System.out.println("********** " + s.getHostname() + " disabled for " + (s.getDisabledUntil() - now) +
-                        " mSecs");
+                    " mSecs");
         }
         // remove any existing leases in scheduler
         // now generate offers for hosts that were scale down and ensure they don't get used
-        for (String hostname : scaleDownHostsRef.get()) {
+        for (String hostname: scaleDownHostsRef.get()) {
             leases.add(LeaseProvider.getLeaseOffer(hostname, cpus1, memory1, ports, attributes1));
         }
         // now try to fill all machines minus one that we filled before
@@ -523,9 +523,9 @@ public class AutoScalerTest {
         do {
             SchedulingResult schedulingResult = scheduler.scheduleOnce(requests, leases);
             if (!schedulingResult.getResultMap().isEmpty()) {
-                for (Map.Entry<String, VMAssignmentResult> entry : schedulingResult.getResultMap().entrySet()) {
+                for (Map.Entry<String, VMAssignmentResult> entry: schedulingResult.getResultMap().entrySet()) {
                     Assert.assertFalse("Did not expect scaled down host " + entry.getKey() + " to be assigned again",
-                            isInCollection(entry.getKey(), scaleDownHostsRef.get()));
+                        isInCollection(entry.getKey(), scaleDownHostsRef.get()));
                     for (int j = 0; j < entry.getValue().getTasksAssigned().size(); j++)
                         requests.remove(0);
                 }
@@ -587,13 +587,13 @@ public class AutoScalerTest {
         final List<VirtualMachineLease> leases = new ArrayList<>();
         Map<String, Protos.Attribute> attributes1 = new HashMap<>();
         final Protos.Attribute attribute1 = Protos.Attribute.newBuilder().setName(hostAttrName)
-                .setType(Protos.Value.Type.TEXT)
-                .setText(Protos.Value.Text.newBuilder().setValue(hostAttrVal1)).build();
+            .setType(Protos.Value.Type.TEXT)
+            .setText(Protos.Value.Text.newBuilder().setValue(hostAttrVal1)).build();
         attributes1.put(hostAttrName, attribute1);
         Map<String, Protos.Attribute> attributes2 = new HashMap<>();
         Protos.Attribute attribute2 = Protos.Attribute.newBuilder().setName(hostAttrName)
-                .setType(Protos.Value.Type.TEXT)
-                .setText(Protos.Value.Text.newBuilder().setValue(hostAttrVal2)).build();
+            .setType(Protos.Value.Type.TEXT)
+            .setText(Protos.Value.Text.newBuilder().setValue(hostAttrVal2)).build();
         attributes2.put(hostAttrName, attribute2);
         List<VirtualMachineLease.Range> ports = new ArrayList<>();
         ports.add(new VirtualMachineLease.Range(1, 10));
@@ -638,8 +638,8 @@ public class AutoScalerTest {
                 //Assert.assertTrue(schedulingResult.getFailures().isEmpty());
                 int successes = 0;
                 final Map<String, VMAssignmentResult> resultMap = schedulingResult.getResultMap();
-                for (Map.Entry<String, VMAssignmentResult> entry : resultMap.entrySet()) {
-                    for (TaskAssignmentResult r : entry.getValue().getTasksAssigned())
+                for (Map.Entry<String, VMAssignmentResult> entry: resultMap.entrySet()) {
+                    for (TaskAssignmentResult r: entry.getValue().getTasksAssigned())
                         if (r.isSuccessful()) {
                             successes++;
                             scheduler.getTaskAssigner().call(r.getRequest(), entry.getKey());
@@ -702,8 +702,8 @@ public class AutoScalerTest {
         final List<VirtualMachineLease> leases = new ArrayList<>();
         Map<String, Protos.Attribute> attributes1 = new HashMap<>();
         final Protos.Attribute attribute1 = Protos.Attribute.newBuilder().setName(hostAttrName)
-                .setType(Protos.Value.Type.TEXT)
-                .setText(Protos.Value.Text.newBuilder().setValue(hostAttrVal1)).build();
+            .setType(Protos.Value.Type.TEXT)
+            .setText(Protos.Value.Text.newBuilder().setValue(hostAttrVal1)).build();
         attributes1.put(hostAttrName, attribute1);
         List<VirtualMachineLease.Range> ports = new ArrayList<>();
         ports.add(new VirtualMachineLease.Range(1, 10));
@@ -730,8 +730,8 @@ public class AutoScalerTest {
                 //Assert.assertTrue(schedulingResult.getFailures().isEmpty());
                 int successes = 0;
                 final Map<String, VMAssignmentResult> resultMap = schedulingResult.getResultMap();
-                for (Map.Entry<String, VMAssignmentResult> entry : resultMap.entrySet()) {
-                    for (TaskAssignmentResult r : entry.getValue().getTasksAssigned())
+                for (Map.Entry<String, VMAssignmentResult> entry: resultMap.entrySet()) {
+                    for (TaskAssignmentResult r: entry.getValue().getTasksAssigned())
                         if (r.isSuccessful()) {
                             successes++;
                             scheduler.getTaskAssigner().call(r.getRequest(), entry.getKey());
@@ -771,7 +771,7 @@ public class AutoScalerTest {
     }
 
     private boolean isInCollection(String host, Collection<String> hostList) {
-        for (String h : hostList)
+        for (String h: hostList)
             if (h.equals(host))
                 return true;
         return false;
@@ -811,8 +811,8 @@ public class AutoScalerTest {
         ports.add(new VirtualMachineLease.Range(1, 10));
         Map<String, Protos.Attribute> attributes = new HashMap<>();
         Protos.Attribute attribute = Protos.Attribute.newBuilder().setName(hostAttrName)
-                .setType(Protos.Value.Type.TEXT)
-                .setText(Protos.Value.Text.newBuilder().setValue(hostAttrVal1)).build();
+            .setType(Protos.Value.Type.TEXT)
+            .setText(Protos.Value.Text.newBuilder().setValue(hostAttrVal1)).build();
         attributes.put(hostAttrName, attribute);
         final List<VirtualMachineLease> leases = new ArrayList<>();
         for (int l = 0; l < minIdle; l++)
@@ -847,7 +847,7 @@ public class AutoScalerTest {
         }
         // ensure normal scale up request happens after the delay
         scheduler.scheduleOnce(Collections.singletonList(TaskRequestProvider.getTaskRequest(1, 1000, 1)),
-                Collections.<VirtualMachineLease>emptyList());
+            Collections.<VirtualMachineLease>emptyList());
         Thread.sleep(1000);
         Assert.assertTrue("Expected to scale UP", scaleUpReceived.get());
     }
@@ -885,8 +885,8 @@ public class AutoScalerTest {
         ports.add(new VirtualMachineLease.Range(1, 10));
         Map<String, Protos.Attribute> attributes = new HashMap<>();
         Protos.Attribute attribute = Protos.Attribute.newBuilder().setName(hostAttrName)
-                .setType(Protos.Value.Type.TEXT)
-                .setText(Protos.Value.Text.newBuilder().setValue(hostAttrVal1)).build();
+            .setType(Protos.Value.Type.TEXT)
+            .setText(Protos.Value.Text.newBuilder().setValue(hostAttrVal1)).build();
         attributes.put(hostAttrName, attribute);
         final List<VirtualMachineLease> leases = new ArrayList<>();
         for (int l = 0; l < maxIdle + 2; l++)
@@ -948,8 +948,8 @@ public class AutoScalerTest {
         AutoScaleRule rule = AutoScaleRuleProvider.createWithMinSize("cluster1", 2, 5, cooldown, 1.0, 1000, minSize);
         Map<String, Protos.Attribute> attributes = new HashMap<>();
         Protos.Attribute attribute = Protos.Attribute.newBuilder().setName(hostAttrName)
-                .setType(Protos.Value.Type.TEXT)
-                .setText(Protos.Value.Text.newBuilder().setValue("cluster1")).build();
+            .setType(Protos.Value.Type.TEXT)
+            .setText(Protos.Value.Text.newBuilder().setValue("cluster1")).build();
         List<VirtualMachineLease.Range> ports = new ArrayList<>();
         ports.add(new VirtualMachineLease.Range(1, 10));
         attributes.put(hostAttrName, attribute);
@@ -979,8 +979,8 @@ public class AutoScalerTest {
         AutoScaleRule rule = AutoScaleRuleProvider.createWithMinSize("cluster1", 2, 5, cooldown, 1.0, 1000, minSize);
         Map<String, Protos.Attribute> attributes = new HashMap<>();
         Protos.Attribute attribute = Protos.Attribute.newBuilder().setName(hostAttrName)
-                .setType(Protos.Value.Type.TEXT)
-                .setText(Protos.Value.Text.newBuilder().setValue("cluster1")).build();
+            .setType(Protos.Value.Type.TEXT)
+            .setText(Protos.Value.Text.newBuilder().setValue("cluster1")).build();
         List<VirtualMachineLease.Range> ports = new ArrayList<>();
         ports.add(new VirtualMachineLease.Range(1, 10));
         attributes.put(hostAttrName, attribute);
@@ -1011,8 +1011,8 @@ public class AutoScalerTest {
         final AutoScaleRule rule = AutoScaleRuleProvider.createWithMaxSize("cluster1", leaveIdle * 2, leaveIdle * 2 + 1, cooldown, 1, 1000, maxSize);
         Map<String, Protos.Attribute> attributes = new HashMap<>();
         Protos.Attribute attribute = Protos.Attribute.newBuilder().setName(hostAttrName)
-                .setType(Protos.Value.Type.TEXT)
-                .setText(Protos.Value.Text.newBuilder().setValue("cluster1")).build();
+            .setType(Protos.Value.Type.TEXT)
+            .setText(Protos.Value.Text.newBuilder().setValue("cluster1")).build();
         List<VirtualMachineLease.Range> ports = new ArrayList<>();
         ports.add(new VirtualMachineLease.Range(1, 10));
         attributes.put(hostAttrName, attribute);
@@ -1039,8 +1039,8 @@ public class AutoScalerTest {
                 leases.clear();
                 int assigned = 0;
                 Assert.assertTrue(result.getResultMap().size() > 0);
-                for (VMAssignmentResult r : result.getResultMap().values()) {
-                    for (TaskAssignmentResult task : r.getTasksAssigned()) {
+                for (VMAssignmentResult r: result.getResultMap().values()) {
+                    for (TaskAssignmentResult task: r.getTasksAssigned()) {
                         assigned++;
                         scheduler.getTaskAssigner().call(task.getRequest(), r.getHostname());
                     }
@@ -1061,8 +1061,8 @@ public class AutoScalerTest {
         final AutoScaleRule rule = AutoScaleRuleProvider.createWithMaxSize("cluster1", 2, 5, cooldown, 1, 1000, maxSize);
         Map<String, Protos.Attribute> attributes = new HashMap<>();
         Protos.Attribute attribute = Protos.Attribute.newBuilder().setName(hostAttrName)
-                .setType(Protos.Value.Type.TEXT)
-                .setText(Protos.Value.Text.newBuilder().setValue("cluster1")).build();
+            .setType(Protos.Value.Type.TEXT)
+            .setText(Protos.Value.Text.newBuilder().setValue("cluster1")).build();
         List<VirtualMachineLease.Range> ports = new ArrayList<>();
         ports.add(new VirtualMachineLease.Range(1, 10));
         attributes.put(hostAttrName, attribute);
@@ -1089,8 +1089,8 @@ public class AutoScalerTest {
                 leases.clear();
                 int assigned = 0;
                 Assert.assertTrue(result.getResultMap().size() > 0);
-                for (VMAssignmentResult r : result.getResultMap().values()) {
-                    for (TaskAssignmentResult task : r.getTasksAssigned()) {
+                for (VMAssignmentResult r: result.getResultMap().values()) {
+                    for (TaskAssignmentResult task: r.getTasksAssigned()) {
                         assigned++;
                         scheduler.getTaskAssigner().call(task.getRequest(), r.getHostname());
                     }
@@ -1113,15 +1113,15 @@ public class AutoScalerTest {
         final AutoScaleRule rule2 = AutoScaleRuleProvider.createRule("cluster2", minIdle, maxIdle, cooldownMillis / 1000L, 1, 1000);
         Map<String, Protos.Attribute> attributes1 = new HashMap<>();
         Protos.Attribute attribute1 = Protos.Attribute.newBuilder().setName(hostAttrName)
-                .setType(Protos.Value.Type.TEXT)
-                .setText(Protos.Value.Text.newBuilder().setValue("cluster1")).build();
+            .setType(Protos.Value.Type.TEXT)
+            .setText(Protos.Value.Text.newBuilder().setValue("cluster1")).build();
         List<VirtualMachineLease.Range> ports = new ArrayList<>();
         ports.add(new VirtualMachineLease.Range(1, 10));
         attributes1.put(hostAttrName, attribute1);
         Map<String, Protos.Attribute> attributes2 = new HashMap<>();
         Protos.Attribute attribute2 = Protos.Attribute.newBuilder().setName(hostAttrName)
-                .setType(Protos.Value.Type.TEXT)
-                .setText(Protos.Value.Text.newBuilder().setValue("cluster2")).build();
+            .setType(Protos.Value.Type.TEXT)
+            .setText(Protos.Value.Text.newBuilder().setValue("cluster2")).build();
         attributes2.put(hostAttrName, attribute1);
         final List<VirtualMachineLease> leases = new ArrayList<>();
         for (int l = 0; l < minIdle; l++)
@@ -1146,31 +1146,31 @@ public class AutoScalerTest {
         final CountDownLatch latch = new CountDownLatch(numTasks);
         final AtomicReference<List<Exception>> exceptions = new AtomicReference<>();
         final TaskSchedulingService schedulingService = new TaskSchedulingService.Builder()
-                .withMaxDelayMillis(100)
-                .withLoopIntervalMillis(20)
-                .withTaskQueue(queue)
-                .withTaskScheduler(scheduler)
-                .withSchedulingResultCallback(schedulingResult -> {
-                    final List<Exception> elist = schedulingResult.getExceptions();
-                    if (elist != null && !elist.isEmpty())
-                        exceptions.set(elist);
-                    final Map<String, VMAssignmentResult> resultMap = schedulingResult.getResultMap();
-                    if (resultMap != null && !resultMap.isEmpty()) {
-                        for (VMAssignmentResult vmar : resultMap.values()) {
-                            vmar.getTasksAssigned().forEach(t -> latch.countDown());
-                        }
+            .withMaxDelayMillis(100)
+            .withLoopIntervalMillis(20)
+            .withTaskQueue(queue)
+            .withTaskScheduler(scheduler)
+            .withSchedulingResultCallback(schedulingResult -> {
+                final List<Exception> elist = schedulingResult.getExceptions();
+                if (elist != null && !elist.isEmpty())
+                    exceptions.set(elist);
+                final Map<String, VMAssignmentResult> resultMap = schedulingResult.getResultMap();
+                if (resultMap != null && !resultMap.isEmpty()) {
+                    for (VMAssignmentResult vmar: resultMap.values()) {
+                        vmar.getTasksAssigned().forEach(t -> latch.countDown());
                     }
-                })
-                .build();
+                }
+            })
+            .build();
         schedulingService.setTaskToClusterAutoScalerMapGetter(task -> Collections.singletonList("cluster1"));
         schedulingService.start();
         schedulingService.addLeases(leases);
         for (int i = 0; i < numTasks; i++)
             queue.queueTask(
-                    QueuableTaskProvider.wrapTask(
-                            new QAttributes.QAttributesAdaptor(0, "default"),
-                            TaskRequestProvider.getTaskRequest(1, 10, 1)
-                    )
+                QueuableTaskProvider.wrapTask(
+                    new QAttributes.QAttributesAdaptor(0, "default"),
+                    TaskRequestProvider.getTaskRequest(1, 10, 1)
+                )
             );
         if (!latch.await(10, TimeUnit.SECONDS))
             Assert.fail("Timeout waiting for tasks to get assigned");
@@ -1184,10 +1184,10 @@ public class AutoScalerTest {
         int laterTasksSize = numTasks * 3;
         for (int i = 0; i < laterTasksSize; i++) {
             queue.queueTask(
-                    QueuableTaskProvider.wrapTask(
-                            new QAttributes.QAttributesAdaptor(0, "default"),
-                            TaskRequestProvider.getTaskRequest(1, 10, 1)
-                    )
+                QueuableTaskProvider.wrapTask(
+                    new QAttributes.QAttributesAdaptor(0, "default"),
+                    TaskRequestProvider.getTaskRequest(1, 10, 1)
+                )
             );
         }
         // wait for less than cooldown time to get aggressive scale up requests
@@ -1216,16 +1216,16 @@ public class AutoScalerTest {
         // create the maxIdle * 2 leases (machines) for each cluster
         Map<String, Protos.Attribute> attributes1 = new HashMap<>();
         Protos.Attribute attribute1 = Protos.Attribute.newBuilder().setName(hostAttrName)
-                .setType(Protos.Value.Type.TEXT)
-                .setText(Protos.Value.Text.newBuilder().setValue(CLUSTER1)).build();
+            .setType(Protos.Value.Type.TEXT)
+            .setText(Protos.Value.Text.newBuilder().setValue(CLUSTER1)).build();
         List<VirtualMachineLease.Range> ports = new ArrayList<>();
         ports.add(new VirtualMachineLease.Range(1, 10));
         attributes1.put(hostAttrName, attribute1);
 
         Map<String, Protos.Attribute> attributes2 = new HashMap<>();
         Protos.Attribute attribute2 = Protos.Attribute.newBuilder().setName(hostAttrName)
-                .setType(Protos.Value.Type.TEXT)
-                .setText(Protos.Value.Text.newBuilder().setValue(CLUSTER2)).build();
+            .setType(Protos.Value.Type.TEXT)
+            .setText(Protos.Value.Text.newBuilder().setValue(CLUSTER2)).build();
         attributes2.put(hostAttrName, attribute2);
         final List<VirtualMachineLease> leases = new ArrayList<>();
 

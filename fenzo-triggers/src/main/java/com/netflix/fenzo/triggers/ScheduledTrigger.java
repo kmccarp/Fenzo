@@ -35,12 +35,12 @@ public abstract class ScheduledTrigger<T> extends Trigger<T> {
 
     @JsonCreator
     public ScheduledTrigger(
-            @JsonProperty("name") String name,
-            @JsonProperty("data") T data,
-            @JsonProperty("dataType") Class<T> dataType,
-            @JsonProperty("action") Class<? extends Action1<T>> action,
-            @JsonProperty("startAt") Date startAt,
-            @JsonProperty("endAt") Date endAt) {
+        @JsonProperty("name") String name,
+        @JsonProperty("data") T data,
+        @JsonProperty("dataType") Class<T> dataType,
+        @JsonProperty("action") Class<? extends Action1<T>> action,
+        @JsonProperty("startAt") Date startAt,
+        @JsonProperty("endAt") Date endAt) {
         super(name, data, dataType, action);
         this.startAt = startAt;
         this.endAt = endAt;

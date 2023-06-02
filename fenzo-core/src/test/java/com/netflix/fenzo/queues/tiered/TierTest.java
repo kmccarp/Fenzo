@@ -29,10 +29,10 @@ public class TierTest {
     private static final String BEST_EFFORT_BUCKET = "bestEffortBucket";
 
     private final SampleDataGenerator generator = new SampleDataGenerator()
-            .addTier(0, createResAllocs(10))
-            .addBucket(0, BUCKET_0, createResAllocs(2))
-            .addBucket(0, BUCKET_1, createResAllocs(4))
-            .addBucket(0, UNUSED_BUCKET, createResAllocs(4));
+        .addTier(0, createResAllocs(10))
+        .addBucket(0, BUCKET_0, createResAllocs(2))
+        .addBucket(0, BUCKET_1, createResAllocs(4))
+        .addBucket(0, UNUSED_BUCKET, createResAllocs(4));
 
     private final BiFunction<Integer, String, Double> allocsShareGetter = mock(BiFunction.class);
 

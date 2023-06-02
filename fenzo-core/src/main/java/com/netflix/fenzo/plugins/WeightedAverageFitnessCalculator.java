@@ -36,8 +36,8 @@ public class WeightedAverageFitnessCalculator implements VMTaskFitnessCalculator
             throw new IllegalArgumentException("There must be at least 1 calculator");
         }
         double sum = calculators.stream()
-                .map(WeightedFitnessCalculator::getWeight)
-                .mapToDouble(Double::doubleValue).sum();
+            .map(WeightedFitnessCalculator::getWeight)
+            .mapToDouble(Double::doubleValue).sum();
         if (sum != 1.0) {
             throw new IllegalArgumentException("The sum of the weights must equal 1.0");
         }
@@ -52,7 +52,7 @@ public class WeightedAverageFitnessCalculator implements VMTaskFitnessCalculator
     public double calculateFitness(TaskRequest taskRequest, VirtualMachineCurrentState targetVM, TaskTrackerState taskTrackerState) {
         double totalWeightedScores = 0.0;
         double totalWeights = 0.0;
-        for (WeightedFitnessCalculator calculator : calculators) {
+        for (WeightedFitnessCalculator calculator: calculators) {
             double score = calculator.getFitnessCalculator().calculateFitness(taskRequest, targetVM, taskTrackerState);
             // If any of the scores are 0.0 then the final score should be 0.0
             if (score == 0.0) {

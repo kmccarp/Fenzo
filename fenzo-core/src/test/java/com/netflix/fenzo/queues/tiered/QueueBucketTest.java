@@ -24,7 +24,7 @@ public class QueueBucketTest {
     private final SampleDataGenerator generator = new SampleDataGenerator();
 
     private final QueuableTask smallTask = generator.createTask(
-            new ResAllocsBuilder(BUCKET_NAME).withCores(1).withMemory(1).withDisk(1).withNetworkMbps(1).build()
+        new ResAllocsBuilder(BUCKET_NAME).withCores(1).withMemory(1).withDisk(1).withNetworkMbps(1).build()
     );
 
     private final ResUsage tierUsage = new ResUsage();

@@ -45,7 +45,8 @@ public class InactiveClusterScaleDownConstraintEvaluator implements ScaleDownOrd
         candidates.forEach(l -> {
             if (isInactive(l)) {
                 inactive.add(l);
-            } else {
+            }
+            else {
                 active.add(l);
             }
         });

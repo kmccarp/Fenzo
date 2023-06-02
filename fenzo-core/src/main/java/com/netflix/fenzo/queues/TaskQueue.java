@@ -41,7 +41,8 @@ public interface TaskQueue extends TaskIterator {
      * such tasks may be either already executing or pending launch. This is used primarily for conveying the state of
      * the tasks via the callback passed to {@link com.netflix.fenzo.TaskSchedulingService#requestAllTasks(Action1)}.
      */
-    enum TaskState { QUEUED, LAUNCHED }
+    enum TaskState { QUEUED, LAUNCHED
+    }
 
     /**
      * Add a task to the queue. Duplicates are not allowed, as in, a task request that has the same Id as another

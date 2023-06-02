@@ -31,12 +31,12 @@ public class ResAllocsUtilTest {
     @Test
     public void testCeilingOf() throws Exception {
         ResAllocs result = ResAllocsUtil.ceilingOf(
-                new ResAllocsBuilder("any").withCores(10).withMemory(20).withNetworkMbps(30).withDisk(40).build(),
-                new ResAllocsBuilder("any").withCores(5).withMemory(25).withNetworkMbps(15).withDisk(45).build()
+            new ResAllocsBuilder("any").withCores(10).withMemory(20).withNetworkMbps(30).withDisk(40).build(),
+            new ResAllocsBuilder("any").withCores(5).withMemory(25).withNetworkMbps(15).withDisk(45).build()
         );
         assertThat(hasEqualResources(
-                new ResAllocsBuilder("any").withCores(10).withMemory(25).withNetworkMbps(30).withDisk(45).build(),
-                result
+            new ResAllocsBuilder("any").withCores(10).withMemory(25).withNetworkMbps(30).withDisk(45).build(),
+            result
         ), is(true));
     }
 

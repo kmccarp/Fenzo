@@ -40,5 +40,5 @@ public interface VMTaskFitnessCalculator {
      * @return a value between 0.0 and 1.0, with higher values representing better fit of the task on the host
      */
     public double calculateFitness(TaskRequest taskRequest, VirtualMachineCurrentState targetVM,
-                                   TaskTrackerState taskTrackerState);
+        TaskTrackerState taskTrackerState);
 }

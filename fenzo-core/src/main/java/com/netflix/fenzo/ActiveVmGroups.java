@@ -36,16 +36,18 @@ class ActiveVmGroups {
             activatedAt = System.currentTimeMillis();
             this.name = name;
         }
+
         private long getActivatedAt() {
             return activatedAt;
         }
+
         private String getName() {
             return name;
         }
     }
 
     private final ConcurrentMap<Integer, List<VmGroup>> activeVmGroupsMap;
-    private volatile long lastSetAt=0L;
+    private volatile long lastSetAt = 0L;
 
     ActiveVmGroups() {
         activeVmGroupsMap = new ConcurrentHashMap<>();
@@ -53,8 +55,8 @@ class ActiveVmGroups {
     }
 
     private VmGroup isIn(String vmg, List<VmGroup> list) {
-        for(VmGroup g: list)
-            if(g.getName().equals(vmg))
+        for (VmGroup g: list)
+            if (g.getName().equals(vmg))
                 return g;
         return null;
     }
@@ -62,9 +64,9 @@ class ActiveVmGroups {
     void setActiveVmGroups(List<String> vmGroups) {
         List<VmGroup> oldList = activeVmGroupsMap.get(0);
         List<VmGroup> vmGroupsList = new ArrayList<>();
-        for(String vmg: vmGroups) {
+        for (String vmg: vmGroups) {
             final VmGroup in = isIn(vmg, oldList);
-            if(in == null)
+            if (in == null)
                 vmGroupsList.add(new VmGroup(vmg));
             else
                 vmGroupsList.add(in);
@@ -79,12 +81,12 @@ class ActiveVmGroups {
 
     boolean isActiveVmGroup(String vmGroupName, boolean strict) {
         final List<VmGroup> vmGroupList = activeVmGroupsMap.get(0);
-        if(vmGroupList.isEmpty())
+        if (vmGroupList.isEmpty())
             return true;
-        if(strict && vmGroupName==null)
+        if (strict && vmGroupName == null)
             return false;
-        for(VmGroup group: vmGroupList) {
-            if(group.getName().equals(vmGroupName))
+        for (VmGroup group: vmGroupList) {
+            if (group.getName().equals(vmGroupName))
                 return true;
         }
         return false;
@@ -92,8 +94,8 @@ class ActiveVmGroups {
 
     long getActivatedAt(String vmGroupName) {
         final List<VmGroup> vmGroupList = activeVmGroupsMap.get(0);
-        for(VmGroup group: vmGroupList) {
-            if(group.getName().equals(vmGroupName))
+        for (VmGroup group: vmGroupList) {
+            if (group.getName().equals(vmGroupName))
                 return group.getActivatedAt();
         }
         return -1L;

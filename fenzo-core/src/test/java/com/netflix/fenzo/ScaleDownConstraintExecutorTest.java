@@ -42,7 +42,7 @@ public class ScaleDownConstraintExecutorTest {
         List<VirtualMachineLease> candidates = leasesWithIds("l0", "l1", "l2", "l3", "l4");
 
         when(orderEvaluator.evaluate(candidates)).thenReturn(
-                asList(asSet(candidates.get(0), candidates.get(2), candidates.get(3)), asSet(candidates.get(1), candidates.get(4)))
+            asList(asSet(candidates.get(0), candidates.get(2), candidates.get(3)), asSet(candidates.get(1), candidates.get(4)))
         );
         when(evenFirstEvaluator.evaluate(any(), any())).then(a -> {
             int idx = leaseIndexOf(a);

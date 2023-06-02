@@ -16,9 +16,9 @@ public class TieredQueueSlasTest {
     private static final String BUCKET_1 = "bucket#1";
 
     private final SampleDataGenerator generator = new SampleDataGenerator()
-            .addTier(0, createResAllocs(8))
-            .addBucket(0, BUCKET_0, createResAllocs(4))
-            .addBucket(0, BUCKET_1, createResAllocs(4));
+        .addTier(0, createResAllocs(8))
+        .addBucket(0, BUCKET_0, createResAllocs(4))
+        .addBucket(0, BUCKET_1, createResAllocs(4));
 
     @Test
     public void testSlas() throws Exception {

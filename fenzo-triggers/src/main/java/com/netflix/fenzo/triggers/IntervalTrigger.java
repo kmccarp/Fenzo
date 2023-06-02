@@ -42,11 +42,11 @@ public class IntervalTrigger<T> extends ScheduledTrigger<T> {
      */
     @JsonCreator
     public IntervalTrigger(@JsonProperty("iso8601Interval") String iso8601Interval,
-                           @JsonProperty("repeatCount") int repeatCount,
-                           @JsonProperty("name") String name,
-                           @JsonProperty("data") T data,
-                           @JsonProperty("dataType") Class<T> dataType,
-                           @JsonProperty("action") Class<? extends Action1<T>> action) {
+        @JsonProperty("repeatCount") int repeatCount,
+        @JsonProperty("name") String name,
+        @JsonProperty("data") T data,
+        @JsonProperty("dataType") Class<T> dataType,
+        @JsonProperty("action") Class<? extends Action1<T>> action) {
         super(name, data, dataType, action, Interval.parse(iso8601Interval).getStart().toDate(), null);
         final Interval jodaInterval = Interval.parse(iso8601Interval);
         this.repeatCount = repeatCount; // -1 is repeat indefinitely
@@ -60,10 +60,10 @@ public class IntervalTrigger<T> extends ScheduledTrigger<T> {
             @Override
             protected MutableTrigger build() {
                 return SimpleScheduleBuilder.simpleSchedule()
-                        .withRepeatCount(repeatCount)
-                        .withIntervalInMilliseconds(repeatInterval)
-                        .withMisfireHandlingInstructionNextWithRemainingCount()
-                        .build();
+                    .withRepeatCount(repeatCount)
+                    .withIntervalInMilliseconds(repeatInterval)
+                    .withMisfireHandlingInstructionNextWithRemainingCount()
+                    .build();
             }
         };
     }

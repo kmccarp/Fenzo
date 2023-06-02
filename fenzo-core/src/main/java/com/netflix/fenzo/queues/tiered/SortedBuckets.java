@@ -79,14 +79,14 @@ class SortedBuckets {
             throw new IllegalStateException("Unexpected: bucket with name=" + bucketName + " does not exist");
         // we have now found a bucket that has the same position due to its usage value. The actual bucket we are
         // interested in (with the same name) may be the same one or it may be to the left or right a few positions.
-        int remPos = buckets.get(index).getName().equals(bucketName)? index : -1;
+        int remPos = buckets.get(index).getName().equals(bucketName) ? index : -1;
         if (remPos < 0)
             remPos = findWalkingLeft(buckets, index, bucketName, bucket.getDominantUsageShare());
         if (remPos < 0)
             remPos = findWalkingRight(buckets, index, bucketName, bucket.getDominantUsageShare());
         if (remPos < 0) {
             logger.error("Unexpected: bucket with name=" + bucketName + " not found to remove, traversing " +
-                    buckets.size() + " buckets to remove it");
+                buckets.size() + " buckets to remove it");
             logger.warn("Invalid sorted buckets list: " + getBucketsListString());
             removeBucketAndResort(bucketName);
         }
@@ -113,7 +113,8 @@ class SortedBuckets {
                 }
                 else if (b.getName().equals(bucketName)) {
                     iterator.remove();
-                } else {
+                }
+                else {
                     if (prev != null) {
                         final int compare = comparator.compare(prev, b);
                         isSorted = isSorted && compare <= 0;
@@ -172,7 +173,7 @@ class SortedBuckets {
         List<QueueBucket> old = new ArrayList<>(buckets);
         bucketMap.clear();
         buckets.clear();
-        for(QueueBucket b: old)
+        for (QueueBucket b: old)
             add(b);
     }
 }

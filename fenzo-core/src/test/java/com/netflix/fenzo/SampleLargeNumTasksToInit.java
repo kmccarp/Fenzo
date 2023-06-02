@@ -31,13 +31,13 @@ public class SampleLargeNumTasksToInit {
 
         @JsonCreator
         public Task(@JsonProperty("id") String id,
-                    @JsonProperty("bucket") String bucket,
-                    @JsonProperty("tier") int tier,
-                    @JsonProperty("cpu") double cpu,
-                    @JsonProperty("memory") double memory,
-                    @JsonProperty("networkMbps") double networkMbps,
-                    @JsonProperty("disk") double disk,
-                    @JsonProperty("host") String host) {
+            @JsonProperty("bucket") String bucket,
+            @JsonProperty("tier") int tier,
+            @JsonProperty("cpu") double cpu,
+            @JsonProperty("memory") double memory,
+            @JsonProperty("networkMbps") double networkMbps,
+            @JsonProperty("disk") double disk,
+            @JsonProperty("host") String host) {
             this.id = id;
             this.bucket = bucket;
             this.tier = tier;
@@ -84,15 +84,16 @@ public class SampleLargeNumTasksToInit {
     static List<Task> getSampleTasksInRunningState() throws IOException {
         final InputStream inputStream = SampleLargeNumTasksToInit.class.getClassLoader().getResourceAsStream("largeFenzoTasksInput.json");
         byte[] buf = new byte[1024];
-        int n=0;
+        int n = 0;
         StringBuilder json = new StringBuilder();
         while (n >= 0) {
             n = inputStream.read(buf, 0, 1024);
-            if (n>0)
+            if (n > 0)
                 json.append(new String(buf, 0, n));
         }
         ObjectMapper mapper = new ObjectMapper();
-        return mapper.readValue(json.toString(), new TypeReference<List<Task>>() {});
+        return mapper.readValue(json.toString(), new TypeReference<List<Task>>() {
+        });
     }
 
     static QueuableTask toQueuableTask(final Task t) {

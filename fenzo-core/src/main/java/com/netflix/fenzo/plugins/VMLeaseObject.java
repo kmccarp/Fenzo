@@ -47,72 +47,84 @@ public class VMLeaseObject implements VirtualMachineLease {
         rangeResources = new HashMap<>();
         // parse out resources from offer
         // expects network bandwidth to come in as consumable scalar resource named "network"
-        for (Protos.Resource resource : offer.getResourcesList()) {
+        for (Protos.Resource resource: offer.getResourcesList()) {
             switch (resource.getType()) {
                 case SCALAR:
                     scalarResources.put(resource.getName(), resource.getScalar().getValue());
                     break;
                 case RANGES:
                     List<Range> ranges = new ArrayList<>();
-                    for (Protos.Value.Range range : resource.getRanges().getRangeList()) {
-                        ranges.add(new Range((int)range.getBegin(), (int) range.getEnd()));
+                    for (Protos.Value.Range range: resource.getRanges().getRangeList()) {
+                        ranges.add(new Range((int) range.getBegin(), (int) range.getEnd()));
                     }
                     rangeResources.put(resource.getName(), ranges);
                     break;
                 default:
                     logger.debug("Unknown resource type " + resource.getType() + " for resource " + resource.getName() +
-                            " in offer, hostname=" + hostname + ", offerId=" + offer.getId());
+                        " in offer, hostname=" + hostname + ", offerId=" + offer.getId());
             }
         }
-        if(offer.getAttributesCount()>0) {
+        if (offer.getAttributesCount() > 0) {
             Map<String, Protos.Attribute> attributeMap = new HashMap<>();
-            for(Protos.Attribute attribute: offer.getAttributesList()) {
+            for (Protos.Attribute attribute: offer.getAttributesList()) {
                 attributeMap.put(attribute.getName(), attribute);
             }
             this.attributeMap = Collections.unmodifiableMap(attributeMap);
-        } else {
+        }
+        else {
             this.attributeMap = Collections.emptyMap();
         }
     }
+
     @Override
     public String hostname() {
         return hostname;
     }
+
     @Override
     public String getVMID() {
         return vmID;
     }
+
     @Override
     public double cpuCores() {
-        return scalarResources.get("cpus")==null? 0.0 : scalarResources.get("cpus");
+        return scalarResources.get("cpus") == null ? 0.0 : scalarResources.get("cpus");
     }
+
     @Override
     public double memoryMB() {
-        return scalarResources.get("mem")==null? 0.0 : scalarResources.get("mem");
+        return scalarResources.get("mem") == null ? 0.0 : scalarResources.get("mem");
     }
+
     @Override
     public double networkMbps() {
-        return scalarResources.get("network")==null? 0.0 : scalarResources.get("network");
+        return scalarResources.get("network") == null ? 0.0 : scalarResources.get("network");
     }
+
     @Override
     public double diskMB() {
-        return scalarResources.get("disk")==null? 0.0 : scalarResources.get("disk");
+        return scalarResources.get("disk") == null ? 0.0 : scalarResources.get("disk");
     }
-    public Protos.Offer getOffer(){
+
+    public Protos.Offer getOffer() {
         return offer;
     }
+
     @Override
     public String getId() {
         return offer.getId().getValue();
     }
+
     @Override
     public long getOfferedTime() {
         return offeredTime;
     }
+
     @Override
     public List<Range> portRanges() {
-        return rangeResources.get("ports")==null? Collections.<Range>emptyList() : rangeResources.get("ports");
+        return rangeResources.get("ports") == null ? Collections.<Range>emptyList() : rangeResources.get("ports");
     }
+
     @Override
     public Map<String, Protos.Attribute> getAttributeMap() {
         return attributeMap;
@@ -131,13 +143,13 @@ public class VMLeaseObject implements VirtualMachineLease {
     @Override
     public String toString() {
         return "VMLeaseObject{" +
-                "offer=" + offer +
-                ", scalars: " + scalarResources.toString() +
-                ", ranges: " + rangeResources.toString() +
-                ", hostname='" + hostname + '\'' +
-                ", vmID='" + vmID + '\'' +
-                ", attributeMap=" + attributeMap +
-                ", offeredTime=" + offeredTime +
-                '}';
+            "offer=" + offer +
+            ", scalars: " + scalarResources.toString() +
+            ", ranges: " + rangeResources.toString() +
+            ", hostname='" + hostname + '\'' +
+            ", vmID='" + vmID + '\'' +
+            ", attributeMap=" + attributeMap +
+            ", offeredTime=" + offeredTime +
+            '}';
     }
 }

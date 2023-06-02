@@ -48,9 +48,9 @@ public class TieredQueueTest {
         QAttributes tier2bktD = new QAttributes.QAttributesAdaptor(1, "D");
         QAttributes tier3bktE = new QAttributes.QAttributesAdaptor(2, "E");
 
-        int tier1=3;
-        int tier2=3;
-        int tier3=1;
+        int tier1 = 3;
+        int tier2 = 3;
+        int tier3 = 1;
         queue.queueTask(QueuableTaskProvider.wrapTask(tier1bktA, TaskRequestProvider.getTaskRequest(1, 100, 1)));
         queue.queueTask(QueuableTaskProvider.wrapTask(tier1bktA, TaskRequestProvider.getTaskRequest(1, 100, 1)));
         queue.queueTask(QueuableTaskProvider.wrapTask(tier1bktB, TaskRequestProvider.getTaskRequest(1, 100, 1)));
@@ -61,7 +61,7 @@ public class TieredQueueTest {
 
         queue.reset();
         Assignable<QueuableTask> taskOrFailure;
-        while ((taskOrFailure = (Assignable<QueuableTask>)queue.next()) != null) {
+        while ((taskOrFailure = (Assignable<QueuableTask>) queue.next()) != null) {
             QueuableTask t = taskOrFailure.getTask();
             switch (t.getQAttributes().getTierNumber()) {
                 case 0:
@@ -92,37 +92,37 @@ public class TieredQueueTest {
 
         final TaskScheduler scheduler = getScheduler();
         final TaskSchedulingService schedulingService = getSchedulingService(queue, scheduler,
-                schedulingResult -> System.out.println("Got scheduling result with " +
-                        schedulingResult.getResultMap().size() + " results"));
+            schedulingResult -> System.out.println("Got scheduling result with " +
+                schedulingResult.getResultMap().size() + " results"));
 
-        int A1=0;
-        int B1=0;
-        int C1=0;
-        for (int i=0; i<2; i++)
+        int A1 = 0;
+        int B1 = 0;
+        int C1 = 0;
+        for (int i = 0; i < 2; i++)
             schedulingService.initializeRunningTask(
-                    QueuableTaskProvider.wrapTask(tier1bktA, TaskRequestProvider.getTaskRequest(2, 2000, 1)),
-                    "hostA"
+                QueuableTaskProvider.wrapTask(tier1bktA, TaskRequestProvider.getTaskRequest(2, 2000, 1)),
+                "hostA"
             );
-        for (int i=0; i<4; i++)
+        for (int i = 0; i < 4; i++)
             schedulingService.initializeRunningTask(
-                    QueuableTaskProvider.wrapTask(tier1bktB, TaskRequestProvider.getTaskRequest(2, 2000, 1)),
-                    "hostB"
+                QueuableTaskProvider.wrapTask(tier1bktB, TaskRequestProvider.getTaskRequest(2, 2000, 1)),
+                "hostB"
             );
-        for (int i=0; i<3; i++)
+        for (int i = 0; i < 3; i++)
             schedulingService.initializeRunningTask(
-                    QueuableTaskProvider.wrapTask(tier1bktC, TaskRequestProvider.getTaskRequest(2, 2000, 1)),
-                    "hostC"
+                QueuableTaskProvider.wrapTask(tier1bktC, TaskRequestProvider.getTaskRequest(2, 2000, 1)),
+                "hostC"
             );
-        for(int i=0; i<4; i++, A1++)
+        for (int i = 0; i < 4; i++, A1++)
             queue.queueTask(QueuableTaskProvider.wrapTask(tier1bktA, TaskRequestProvider.getTaskRequest(2, 2000, 1)));
-        for(int i=0; i<4; i++, B1++)
+        for (int i = 0; i < 4; i++, B1++)
             queue.queueTask(QueuableTaskProvider.wrapTask(tier1bktB, TaskRequestProvider.getTaskRequest(2, 2000, 1)));
-        for(int i=0; i<4; i++, C1++)
+        for (int i = 0; i < 4; i++, C1++)
             queue.queueTask(QueuableTaskProvider.wrapTask(tier1bktC, TaskRequestProvider.getTaskRequest(2, 2000, 1)));
 
         queue.reset();
         Assignable<QueuableTask> taskOrFailure;
-        while ((taskOrFailure = (Assignable<QueuableTask>)queue.next()) != null) {
+        while ((taskOrFailure = (Assignable<QueuableTask>) queue.next()) != null) {
             QueuableTask t = taskOrFailure.getTask();
             switch (t.getQAttributes().getBucketName()) {
                 case "A":
@@ -187,10 +187,10 @@ public class TieredQueueTest {
         bucketWeights.put("C", 1.0);
 
         ResAllocs tier1Capacity = new ResAllocsBuilder("tier#0")
-                .withCores(10 * 4)
-                .withMemory(10 * 4000)
-                .withNetworkMbps(10 * 4000)
-                .build();
+            .withCores(10 * 4)
+            .withMemory(10 * 4000)
+            .withNetworkMbps(10 * 4000)
+            .build();
         queue.setSla(new TieredQueueSlas(singletonMap(1, tier1Capacity), getTierAllocsForBuckets(bucketWeights)));
 
         final AtomicInteger countA = new AtomicInteger();
@@ -217,16 +217,18 @@ public class TieredQueueTest {
 
         // Double the tier capacity
         ResAllocs doubledTier1Capacity = new ResAllocsBuilder("tier#0")
-                .withCores(20 * 4)
-                .withMemory(20 * 4000)
-                .withNetworkMbps(20 * 4000)
-                .build();
+            .withCores(20 * 4)
+            .withMemory(20 * 4000)
+            .withNetworkMbps(20 * 4000)
+            .build();
         queue.setSla(new TieredQueueSlas(singletonMap(0, doubledTier1Capacity), getTierAllocsForBuckets(bucketWeights)));
 
         // reset latch to new one
         latchRef.set(new CountDownLatch(40));
         // reset counters
-        countA.set(0); countB.set(0); countC.set(0);
+        countA.set(0);
+        countB.set(0);
+        countC.set(0);
         // create additional 25 1-cpu tasks each
         createTasksForBuckets(queue, 25, "A", "B", "C");
         // add new leases
@@ -263,9 +265,9 @@ public class TieredQueueTest {
         Assert.assertTrue("Timeout waiting for assignments", latchRef.get().await(2, TimeUnit.SECONDS));
         Thread.sleep(500); // Additional way due to race conditions
 
-        Assert.assertEquals(10-5, countA.get());
+        Assert.assertEquals(10 - 5, countA.get());
         Assert.assertEquals(20, countB.get());
-        Assert.assertEquals(10-3, countC.get());
+        Assert.assertEquals(10 - 3, countC.get());
     }
 
     @Test
@@ -277,10 +279,10 @@ public class TieredQueueTest {
         bucketWeights.put("C", 1.0);
 
         ResAllocs tier1Capacity = new ResAllocsBuilder("tier#0")
-                .withCores(70 * 4)
-                .withMemory(70 * 4000)
-                .withNetworkMbps(70 * 4000)
-                .build();
+            .withCores(70 * 4)
+            .withMemory(70 * 4000)
+            .withNetworkMbps(70 * 4000)
+            .build();
         queue.setSla(new TieredQueueSlas(singletonMap(0, tier1Capacity), getTierAllocsForBuckets(bucketWeights)));
 
         final AtomicInteger countA = new AtomicInteger();
@@ -317,7 +319,7 @@ public class TieredQueueTest {
             QAttributes tier1bkt = new QAttributes.QAttributesAdaptor(0, b);
             for (int i = 0; i < numTasks; i++)
                 schedulingService.initializeRunningTask(
-                        QueuableTaskProvider.wrapTask(tier1bkt, TaskRequestProvider.getTaskRequest(1, 100, 1)), "host" + r.nextInt());
+                    QueuableTaskProvider.wrapTask(tier1bkt, TaskRequestProvider.getTaskRequest(1, 100, 1)), "host" + r.nextInt());
         }
     }
 
@@ -326,17 +328,17 @@ public class TieredQueueTest {
     // is counted down for each task assignment.
     private TaskSchedulingService setupSchedSvcWithAssignmentCounters(TaskQueue queue, AtomicReference<CountDownLatch> latch, AtomicInteger... counters) {
         return getSchedulingService(queue, getScheduler(),
-                result -> {
-                    if (!result.getResultMap().isEmpty()) {
-                        for (Map.Entry<String, VMAssignmentResult> entry: result.getResultMap().entrySet()) {
-                            for (TaskAssignmentResult t: entry.getValue().getTasksAssigned()) {
-                                latch.get().countDown();
-                                int idx = ((QueuableTask) t.getRequest()).getQAttributes().getBucketName().charAt(0) - 'A';
-                                counters[idx].incrementAndGet();
-                            }
+            result -> {
+                if (!result.getResultMap().isEmpty()) {
+                    for (Map.Entry<String, VMAssignmentResult> entry: result.getResultMap().entrySet()) {
+                        for (TaskAssignmentResult t: entry.getValue().getTasksAssigned()) {
+                            latch.get().countDown();
+                            int idx = ((QueuableTask) t.getRequest()).getQAttributes().getBucketName().charAt(0) - 'A';
+                            counters[idx].incrementAndGet();
                         }
                     }
                 }
+            }
         );
     }
 
@@ -348,42 +350,42 @@ public class TieredQueueTest {
         tierAllocs.put(0, new HashMap<>());
         for (Map.Entry<String, Double> entry: bucketWeights.entrySet()) {
             tierAllocs.get(0).put(entry.getKey(),
-                    new ResAllocsBuilder(entry.getKey())
-                            .withCores(10 * entry.getValue())
-                            .withMemory(1000 * entry.getValue())
-                            .withNetworkMbps(1000 * entry.getValue())
-                            .withDisk(1000 * entry.getValue())
-                            .build()
+                new ResAllocsBuilder(entry.getKey())
+                    .withCores(10 * entry.getValue())
+                    .withMemory(1000 * entry.getValue())
+                    .withNetworkMbps(1000 * entry.getValue())
+                    .withDisk(1000 * entry.getValue())
+                    .build()
             );
         }
         return tierAllocs;
     }
 
     private TaskSchedulingService getSchedulingService(TaskQueue queue, TaskScheduler scheduler,
-                                                       Action1<SchedulingResult> resultCallback) {
+        Action1<SchedulingResult> resultCallback) {
         return new TaskSchedulingService.Builder()
-                .withTaskQueue(queue)
-                .withLoopIntervalMillis(100L)
-                .withPreSchedulingLoopHook(new Action0() {
-                    @Override
-                    public void call() {
-                        System.out.println("Pre-scheduling hook");
-                    }
-                })
-                .withSchedulingResultCallback(resultCallback)
-                .withTaskScheduler(scheduler)
-                .build();
+            .withTaskQueue(queue)
+            .withLoopIntervalMillis(100L)
+            .withPreSchedulingLoopHook(new Action0() {
+                @Override
+                public void call() {
+                    System.out.println("Pre-scheduling hook");
+                }
+            })
+            .withSchedulingResultCallback(resultCallback)
+            .withTaskScheduler(scheduler)
+            .build();
     }
 
     private TaskScheduler getScheduler() {
         return new TaskScheduler.Builder()
-                .withLeaseOfferExpirySecs(1000000)
-                .withLeaseRejectAction(new Action1<VirtualMachineLease>() {
-                    @Override
-                    public void call(VirtualMachineLease virtualMachineLease) {
-                        System.out.println("Rejecting offer on host " + virtualMachineLease.hostname());
-                    }
-                })
-                .build();
+            .withLeaseOfferExpirySecs(1000000)
+            .withLeaseRejectAction(new Action1<VirtualMachineLease>() {
+                @Override
+                public void call(VirtualMachineLease virtualMachineLease) {
+                    System.out.println("Rejecting offer on host " + virtualMachineLease.hostname());
+                }
+            })
+            .build();
     }
 }

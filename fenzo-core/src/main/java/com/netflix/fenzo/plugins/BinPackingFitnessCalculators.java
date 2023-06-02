@@ -43,18 +43,18 @@ public class BinPackingFitnessCalculators {
         @Override
         public double calculateFitness(TaskRequest taskRequest, VirtualMachineCurrentState targetVM, TaskTrackerState taskTrackerState) {
             return calculateResourceFitness(taskRequest, targetVM, taskTrackerState,
-                    new Func1<TaskRequest, Double>() {
-                        @Override
-                        public Double call(TaskRequest request) {
-                            return request.getCPUs();
-                        }
-                    },
-                    new Func1<VirtualMachineLease, Double>() {
-                        @Override
-                        public Double call(VirtualMachineLease l) {
-                            return l.cpuCores();
-                        }
-                    });
+                new Func1<TaskRequest, Double>() {
+                    @Override
+                    public Double call(TaskRequest request) {
+                        return request.getCPUs();
+                    }
+                },
+                new Func1<VirtualMachineLease, Double>() {
+                    @Override
+                    public Double call(VirtualMachineLease l) {
+                        return l.cpuCores();
+                    }
+                });
         }
     };
 
@@ -70,18 +70,18 @@ public class BinPackingFitnessCalculators {
         @Override
         public double calculateFitness(TaskRequest taskRequest, VirtualMachineCurrentState targetVM, TaskTrackerState taskTrackerState) {
             return calculateResourceFitness(taskRequest, targetVM, taskTrackerState,
-                    new Func1<TaskRequest, Double>() {
-                        @Override
-                        public Double call(TaskRequest request) {
-                            return request.getMemory();
-                        }
-                    },
-                    new Func1<VirtualMachineLease, Double>() {
-                        @Override
-                        public Double call(VirtualMachineLease l) {
-                            return l.memoryMB();
-                        }
-                    });
+                new Func1<TaskRequest, Double>() {
+                    @Override
+                    public Double call(TaskRequest request) {
+                        return request.getMemory();
+                    }
+                },
+                new Func1<VirtualMachineLease, Double>() {
+                    @Override
+                    public Double call(VirtualMachineLease l) {
+                        return l.memoryMB();
+                    }
+                });
         }
     };
 
@@ -114,18 +114,18 @@ public class BinPackingFitnessCalculators {
         @Override
         public double calculateFitness(TaskRequest taskRequest, VirtualMachineCurrentState targetVM, TaskTrackerState taskTrackerState) {
             return calculateResourceFitness(taskRequest, targetVM, taskTrackerState,
-                    new Func1<TaskRequest, Double>() {
-                        @Override
-                        public Double call(TaskRequest request) {
-                            return request.getNetworkMbps();
-                        }
-                    },
-                    new Func1<VirtualMachineLease, Double>() {
-                        @Override
-                        public Double call(VirtualMachineLease l) {
-                            return l.networkMbps();
-                        }
-                    });
+                new Func1<TaskRequest, Double>() {
+                    @Override
+                    public Double call(TaskRequest request) {
+                        return request.getNetworkMbps();
+                    }
+                },
+                new Func1<VirtualMachineLease, Double>() {
+                    @Override
+                    public Double call(VirtualMachineLease l) {
+                        return l.networkMbps();
+                    }
+                });
         }
     };
 
@@ -143,21 +143,21 @@ public class BinPackingFitnessCalculators {
             double cpuFitness = cpuBinPacker.calculateFitness(taskRequest, targetVM, taskTrackerState);
             double memFitness = memoryBinPacker.calculateFitness(taskRequest, targetVM, taskTrackerState);
             double networkFitness = networkBinPacker.calculateFitness(taskRequest, targetVM, taskTrackerState);
-            return (cpuFitness + memFitness + networkFitness)/3.0;
+            return (cpuFitness + memFitness + networkFitness) / 3.0;
         }
     };
 
     private static double calculateResourceFitness(TaskRequest request, VirtualMachineCurrentState targetVM, TaskTrackerState taskTrackerState,
-                                                   Func1<TaskRequest, Double> taskResourceGetter,
-                                                   Func1<VirtualMachineLease, Double> leaseResourceGetter) {
+        Func1<TaskRequest, Double> taskResourceGetter,
+        Func1<VirtualMachineLease, Double> leaseResourceGetter) {
         double totalRes = leaseResourceGetter.call(targetVM.getCurrAvailableResources());
         Iterator<TaskRequest> iterator = targetVM.getRunningTasks().iterator();
-        double oldJobsTotal=0.0;
-        while(iterator.hasNext())
+        double oldJobsTotal = 0.0;
+        while (iterator.hasNext())
             oldJobsTotal += taskResourceGetter.call(iterator.next());
         double usedResource = taskResourceGetter.call(request);
         Iterator<TaskAssignmentResult> taskAssignmentResultIterator = targetVM.getTasksCurrentlyAssigned().iterator();
-        while(taskAssignmentResultIterator.hasNext())
+        while (taskAssignmentResultIterator.hasNext())
             usedResource += taskResourceGetter.call(taskAssignmentResultIterator.next().getRequest());
         totalRes += oldJobsTotal;
         usedResource += oldJobsTotal;

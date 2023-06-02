@@ -23,34 +23,34 @@ import java.util.*;
 public class LeaseProvider {
 
     public static VirtualMachineLease getLeaseOffer(final String hostname, final double cpus,
-                                             final double memory, final List<VirtualMachineLease.Range> portRanges) {
+        final double memory, final List<VirtualMachineLease.Range> portRanges) {
         return getLeaseOffer(hostname, cpus, memory, 0.0, portRanges, null);
     }
 
     public static VirtualMachineLease getLeaseOffer(final String hostname, final double cpus, final double memory,
-                                             final double network, final List<VirtualMachineLease.Range> portRanges) {
+        final double network, final List<VirtualMachineLease.Range> portRanges) {
         return getLeaseOffer(hostname, cpus, memory, network, portRanges, null);
     }
 
     public static VirtualMachineLease getLeaseOffer(final String hostname, final double cpus, final double memory,
-                                             final List<VirtualMachineLease.Range> portRanges,
-                                             final Map<String, Protos.Attribute> attributesMap) {
+        final List<VirtualMachineLease.Range> portRanges,
+        final Map<String, Protos.Attribute> attributesMap) {
         return getLeaseOffer(hostname, cpus, memory, 0.0, portRanges, attributesMap);
     }
 
     public static VirtualMachineLease getLeaseOffer(final String hostname, final double cpus, final double memory, final double disk,
-                                             final double network, final List<VirtualMachineLease.Range> portRanges,
-                                             final Map<String, Protos.Attribute> attributesMap) {
+        final double network, final List<VirtualMachineLease.Range> portRanges,
+        final Map<String, Protos.Attribute> attributesMap) {
         return getLeaseOffer(hostname, cpus, memory, disk, network, portRanges, attributesMap, null);
     }
 
     public static VirtualMachineLease getLeaseOffer(final String hostname, final double cpus, final double memory, final double disk,
-                                             final double network, final List<VirtualMachineLease.Range> portRanges,
-                                             final Map<String, Protos.Attribute> attributesMap, Map<String, Double> scalarResources) {
+        final double network, final List<VirtualMachineLease.Range> portRanges,
+        final Map<String, Protos.Attribute> attributesMap, Map<String, Double> scalarResources) {
         final long offeredTime = System.currentTimeMillis();
         final String id = UUID.randomUUID().toString();
         final String vmId = UUID.randomUUID().toString();
-        final Map<String, Double> scalars = scalarResources==null? Collections.<String, Double>emptyMap() : scalarResources;
+        final Map<String, Double> scalars = scalarResources == null ? Collections.<String, Double>emptyMap() : scalarResources;
         return new VirtualMachineLease() {
             @Override
             public String getId() {
@@ -90,17 +90,17 @@ public class LeaseProvider {
             @Override
             public Protos.Offer getOffer() {
                 return Protos.Offer.getDefaultInstance()
-                        .toBuilder()
-                        .setId(Protos.OfferID.getDefaultInstance().toBuilder().setValue(id).build())
-                        .setHostname(hostname)
-                        .setSlaveId(Protos.SlaveID.getDefaultInstance().toBuilder().setValue(vmId).build())
-                        .setFrameworkId(Protos.FrameworkID.getDefaultInstance().toBuilder().setValue("Testing").build())
-                        .build();
+                    .toBuilder()
+                    .setId(Protos.OfferID.getDefaultInstance().toBuilder().setValue(id).build())
+                    .setHostname(hostname)
+                    .setSlaveId(Protos.SlaveID.getDefaultInstance().toBuilder().setValue(vmId).build())
+                    .setFrameworkId(Protos.FrameworkID.getDefaultInstance().toBuilder().setValue("Testing").build())
+                    .build();
             }
 
             @Override
             public Map<String, Protos.Attribute> getAttributeMap() {
-                return attributesMap==null? null : attributesMap;
+                return attributesMap == null ? null : attributesMap;
             }
             @Override
             public Double getScalarValue(String name) {
@@ -114,32 +114,35 @@ public class LeaseProvider {
     }
 
     public static VirtualMachineLease getLeaseOffer(final String hostname, final double cpus, final double memory,
-                                             final double network, final List<VirtualMachineLease.Range> portRanges,
-                                             final Map<String, Protos.Attribute> attributesMap) {
+        final double network, final List<VirtualMachineLease.Range> portRanges,
+        final Map<String, Protos.Attribute> attributesMap) {
         return getLeaseOffer(hostname, cpus, memory, 500000, network, portRanges, attributesMap);
     }
 
     public static VirtualMachineLease getLeaseOffer(final String hostname, final double cpus,
-                                             final double memory, final int portBegin, final int portEnd) {
+        final double memory, final int portBegin, final int portEnd) {
         List<VirtualMachineLease.Range> ranges = new ArrayList<>(1);
         ranges.add(new VirtualMachineLease.Range(portBegin, portEnd));
         return getLeaseOffer(hostname, cpus, memory, ranges);
     }
 
     public static List<VirtualMachineLease> getLeases(int numHosts, double cpus, double memory,
-                                                int portBeg, int portEnd) {
+        int portBeg, int portEnd) {
         return getLeases(numHosts, cpus, memory, 0.0, portBeg, portEnd);
     }
+
     public static List<VirtualMachineLease> getLeases(int numHosts, double cpus, double memory, double network,
-                                               int portBeg, int portEnd) {
+        int portBeg, int portEnd) {
         return getLeases(0, numHosts, cpus, memory, network, portBeg, portEnd);
     }
+
     public static List<VirtualMachineLease> getLeases(int hostSuffixBegin, int numHosts, double cpus, double memory,
-                                               int portBeg, int portEnd) {
+        int portBeg, int portEnd) {
         return getLeases(hostSuffixBegin, numHosts, cpus, memory, 0.0, portBeg, portEnd);
     }
+
     public static List<VirtualMachineLease> getLeases(int hostSuffixBegin, int numHosts, double cpus, double memory,
-                                               double network, int portBeg, int portEnd) {
+        double network, int portBeg, int portEnd) {
         VirtualMachineLease.Range range = new VirtualMachineLease.Range(portBeg, portEnd);
         List<VirtualMachineLease.Range> ranges = new ArrayList<>(1);
         ranges.add(range);
@@ -147,38 +150,40 @@ public class LeaseProvider {
     }
 
     public static List<VirtualMachineLease> getLeases(int numHosts, double cpus, double memory,
-                                                List<VirtualMachineLease.Range> ports) {
+        List<VirtualMachineLease.Range> ports) {
         return getLeases(0, numHosts, cpus, memory, ports);
     }
+
     public static List<VirtualMachineLease> getLeases(int hostSuffixBegin, int numHosts, double cpus, double memory,
-                                               List<VirtualMachineLease.Range> ports) {
+        List<VirtualMachineLease.Range> ports) {
         return getLeases(hostSuffixBegin, numHosts, cpus, memory, 0.0, ports);
     }
+
     public static List<VirtualMachineLease> getLeases(int hostSuffixBegin, int numHosts, double cpus, double memory,
-                                               double network, List<VirtualMachineLease.Range> ports) {
+        double network, List<VirtualMachineLease.Range> ports) {
         List<VirtualMachineLease> leases = new ArrayList<>(numHosts);
-        for(int i=hostSuffixBegin; i<(hostSuffixBegin+numHosts); i++)
-            leases.add(getLeaseOffer("host"+i, cpus, memory, network, ports));
+        for (int i = hostSuffixBegin; i < (hostSuffixBegin + numHosts); i++)
+            leases.add(getLeaseOffer("host" + i, cpus, memory, network, ports));
         return leases;
     }
 
     private static List<VirtualMachineLease.Range> getRangesAfterConsuming(List<VirtualMachineLease.Range> orig, int consumePort) {
         List<VirtualMachineLease.Range> result = new ArrayList<>();
-        for(int i=0; i<orig.size(); i++) {
+        for (int i = 0; i < orig.size(); i++) {
             VirtualMachineLease.Range range = orig.get(i);
-            if(consumePort<range.getBeg() || consumePort>range.getEnd()) {
+            if (consumePort < range.getBeg() || consumePort > range.getEnd()) {
                 result.add(range);
                 continue;
             }
-            if(range.getBeg() != range.getEnd()) {
-                if(consumePort>range.getBeg()) {
-                    VirtualMachineLease.Range split = new VirtualMachineLease.Range(range.getBeg(), consumePort-1);
+            if (range.getBeg() != range.getEnd()) {
+                if (consumePort > range.getBeg()) {
+                    VirtualMachineLease.Range split = new VirtualMachineLease.Range(range.getBeg(), consumePort - 1);
                     result.add(split);
                 }
-                if(consumePort<range.getEnd())
-                    result.add(new VirtualMachineLease.Range(consumePort+1, range.getEnd()));
+                if (consumePort < range.getEnd())
+                    result.add(new VirtualMachineLease.Range(consumePort + 1, range.getEnd()));
             }
-            for(int j=i+1; j<orig.size(); j++)
+            for (int j = i + 1; j < orig.size(); j++)
                 result.add(orig.get(j));
             return result;
         }
@@ -186,23 +191,23 @@ public class LeaseProvider {
     }
 
     public static VirtualMachineLease getConsumedLease(VMAssignmentResult result) {
-        double cpus=0.0;
-        double memory=0.0;
+        double cpus = 0.0;
+        double memory = 0.0;
         double network = 0.0;
         List<Integer> ports = new ArrayList<>();
-        for(TaskAssignmentResult r: result.getTasksAssigned()) {
+        for (TaskAssignmentResult r: result.getTasksAssigned()) {
             cpus += r.getRequest().getCPUs();
             memory += r.getRequest().getMemory();
             network += r.getRequest().getNetworkMbps();
             ports.addAll(r.getAssignedPorts());
         }
-        double totalCpus=0.0;
-        double totalMem=0.0;
-        double totalNetwork=0.0;
+        double totalCpus = 0.0;
+        double totalMem = 0.0;
+        double totalNetwork = 0.0;
         List<VirtualMachineLease.Range> totPortRanges = new ArrayList<>();
-        String hostname="";
+        String hostname = "";
         Map<String, Protos.Attribute> attributes = null;
-        for(VirtualMachineLease l: result.getLeasesUsed()) {
+        for (VirtualMachineLease l: result.getLeasesUsed()) {
             hostname = l.hostname();
             attributes = l.getAttributeMap();
             totalCpus += l.cpuCores();
@@ -210,16 +215,16 @@ public class LeaseProvider {
             totalNetwork += l.networkMbps();
             totPortRanges.addAll(l.portRanges());
         }
-        for(Integer port: ports)
+        for (Integer port: ports)
             totPortRanges = getRangesAfterConsuming(totPortRanges, port);
-        return getLeaseOffer(hostname, totalCpus-cpus, totalMem-memory, totalNetwork-network, totPortRanges, attributes);
+        return getLeaseOffer(hostname, totalCpus - cpus, totalMem - memory, totalNetwork - network, totPortRanges, attributes);
     }
 
     public static VirtualMachineLease getConsumedLease(VirtualMachineLease orig, double consumedCpu, double consumedMemory, List<Integer> consumedPorts) {
         final double cpu = orig.cpuCores() - consumedCpu;
         final double memory = orig.memoryMB() - consumedMemory;
         List<VirtualMachineLease.Range> ranges = orig.portRanges();
-        for(Integer port: consumedPorts) {
+        for (Integer port: consumedPorts) {
             ranges = getRangesAfterConsuming(ranges, port);
         }
         return getLeaseOffer(orig.hostname(), cpu, memory, 0.0, ranges, orig.getAttributeMap());

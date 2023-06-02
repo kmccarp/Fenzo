@@ -65,7 +65,7 @@ class NaiveShortfallEvaluator extends BaseShortfallEvaluator {
 
     private Map<String, Integer> adjustAgentScaleUp(Map<String, Integer> shortfallMap, AutoScaleRules autoScaleRules) {
         Map<String, Integer> corrected = new HashMap<>(shortfallMap);
-        for (Map.Entry<String, Integer> entry : shortfallMap.entrySet()) {
+        for (Map.Entry<String, Integer> entry: shortfallMap.entrySet()) {
             AutoScaleRule rule = autoScaleRules.get(entry.getKey());
             if (rule != null) {
                 int adjustedValue = rule.getShortfallAdjustedAgents(entry.getValue());

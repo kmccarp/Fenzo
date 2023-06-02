@@ -33,7 +33,7 @@ public interface ConstraintEvaluator {
 
         public Result(boolean successful, String failureReason) {
             isSuccessful = successful;
-            this.failureReason = isSuccessful? "" : failureReason;
+            this.failureReason = isSuccessful ? "" : failureReason;
         }
 
         /**
@@ -72,5 +72,5 @@ public interface ConstraintEvaluator {
      *         an unsuccessful Result otherwise
      */
     public Result evaluate(TaskRequest taskRequest, VirtualMachineCurrentState targetVM,
-                           TaskTrackerState taskTrackerState);
+        TaskTrackerState taskTrackerState);
 }

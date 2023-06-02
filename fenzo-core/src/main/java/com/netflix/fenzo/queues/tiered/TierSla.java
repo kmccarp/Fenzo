@@ -36,7 +36,7 @@ import java.util.Map;
     private double totalDisk = 0.0;
 
     void setTierCapacity(ResAllocs tierCapacity) {
-        this.tierCapacity  = tierCapacity;
+        this.tierCapacity = tierCapacity;
     }
 
     void setAlloc(String bucket, ResAllocs value) {

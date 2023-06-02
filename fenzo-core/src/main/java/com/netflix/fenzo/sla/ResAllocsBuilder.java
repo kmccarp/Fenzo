@@ -127,12 +127,12 @@ public class ResAllocsBuilder {
         @Override
         public String toString() {
             return "ResAllocsImpl{" +
-                    "taskGroupName='" + taskGroupName + '\'' +
-                    ", cores=" + cores +
-                    ", memory=" + memory +
-                    ", networkMbps=" + networkMbps +
-                    ", disk=" + disk +
-                    '}';
+                "taskGroupName='" + taskGroupName + '\'' +
+                ", cores=" + cores +
+                ", memory=" + memory +
+                ", networkMbps=" + networkMbps +
+                ", disk=" + disk +
+                '}';
         }
     }
 }

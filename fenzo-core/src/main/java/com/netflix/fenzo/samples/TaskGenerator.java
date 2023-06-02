@@ -140,27 +140,27 @@ public class TaskGenerator implements Runnable {
      * @param args Arguments to the program. Provide as the only argument, the mesos connection string.
      */
     public static void main(String[] args) {
-        if(args.length!=1) {
+        if (args.length != 1) {
             System.err.println("Must provide one argument - Mesos master location string");
             System.exit(1);
         }
-        int numTasks=10;
-        int numIters=5;
+        int numTasks = 10;
+        int numIters = 5;
         BlockingQueue<TaskRequest> taskQueue = new LinkedBlockingQueue<>();
         final TaskGenerator taskGenerator = new TaskGenerator(taskQueue, numIters, numTasks);
         final SampleFramework framework = new SampleFramework(taskQueue, args[0], // mesos master location string
-                new Action1<String>() {
-                    @Override
-                    public void call(String s) {
-                        taskGenerator.tasksCompleted.incrementAndGet();
-                    }
-                },
-                new Func1<String, String>() {
-                    @Override
-                    public String call(String s) {
-                        return "sleep 2";
-                    }
-                });
+            new Action1<String>() {
+                @Override
+                public void call(String s) {
+                    taskGenerator.tasksCompleted.incrementAndGet();
+                }
+            },
+            new Func1<String, String>() {
+                @Override
+                public String call(String s) {
+                    return "sleep 2";
+                }
+            });
         long start = System.currentTimeMillis();
         (new Thread(taskGenerator)).start();
         new Thread(new Runnable() {
@@ -169,11 +169,14 @@ public class TaskGenerator implements Runnable {
                 framework.runAll();
             }
         }).start();
-        while(taskGenerator.tasksCompleted.get() < (numIters*numTasks)) {
-            System.out.println("NUM TASKS COMPLETED: " + taskGenerator.tasksCompleted.get() + " of " + (numIters*numTasks));
-            try{Thread.sleep(1000);}catch(InterruptedException ie){}
+        while (taskGenerator.tasksCompleted.get() < (numIters * numTasks)) {
+            System.out.println("NUM TASKS COMPLETED: " + taskGenerator.tasksCompleted.get() + " of " + (numIters * numTasks));
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ie) {
+            }
         }
-        System.out.println("Took " + (System.currentTimeMillis()-start) + " mS to complete " + (numIters*numTasks) + " tasks");
+        System.out.println("Took " + (System.currentTimeMillis() - start) + " mS to complete " + (numIters * numTasks) + " tasks");
         framework.shutdown();
         System.exit(0);
     }

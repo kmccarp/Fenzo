@@ -34,10 +34,10 @@ public class TaskTracker {
 
     static class TaskGroupUsage implements ResAllocs {
         private final String taskGroupName;
-        private double cores=0.0;
-        private double memory=0.0;
-        private double networkMbps=0.0;
-        private double disk=0.0;
+        private double cores = 0.0;
+        private double memory = 0.0;
+        private double networkMbps = 0.0;
+        private double disk = 0.0;
 
         private TaskGroupUsage(String taskGroupName) {
             this.taskGroupName = taskGroupName;
@@ -77,24 +77,24 @@ public class TaskTracker {
 
         void subtractUsage(TaskRequest task) {
             cores -= task.getCPUs();
-            if(cores < 0.0) {
+            if (cores < 0.0) {
                 logger.warn("correcting cores usage <0.0");
-                cores=0.0;
+                cores = 0.0;
             }
             memory -= task.getMemory();
-            if(memory<0.0) {
+            if (memory < 0.0) {
                 logger.warn("correcting memory usage<0.0");
-                memory=0.0;
+                memory = 0.0;
             }
             networkMbps -= task.getNetworkMbps();
-            if(networkMbps<0.0) {
+            if (networkMbps < 0.0) {
                 logger.warn("correcting networkMbps usage<0.0");
-                networkMbps=0.0;
+                networkMbps = 0.0;
             }
             disk -= task.getDisk();
-            if(disk<0.0) {
+            if (disk < 0.0) {
                 logger.warn("correcting disk usage<0.0");
-                disk=0.0;
+                disk = 0.0;
             }
         }
     }
@@ -106,6 +106,7 @@ public class TaskTracker {
     public static class ActiveTask {
         private TaskRequest taskRequest;
         private AssignableVirtualMachine avm;
+
         public ActiveTask(TaskRequest taskRequest, AssignableVirtualMachine avm) {
             this.taskRequest = taskRequest;
             this.avm = avm;
@@ -146,11 +147,11 @@ public class TaskTracker {
 
     boolean addRunningTask(TaskRequest request, AssignableVirtualMachine avm) {
         final boolean added = runningTasks.put(request.getId(), new ActiveTask(request, avm)) == null;
-        if(added) {
+        if (added) {
             addUsage(request);
             if (usageTrackedQueue != null && request instanceof QueuableTask)
                 try {
-                    usageTrackedQueue.launchTask((QueuableTask)request);
+                    usageTrackedQueue.launchTask((QueuableTask) request);
                 } catch (TaskQueueException e) {
                     // We don't expect this to happen since we call this only outside scheduling iteration
                     logger.warn("Unexpected: " + e.getMessage());
@@ -161,12 +162,12 @@ public class TaskTracker {
 
     boolean removeRunningTask(String taskId) {
         final ActiveTask removed = runningTasks.remove(taskId);
-        if(removed != null) {
+        if (removed != null) {
             final TaskRequest task = removed.getTaskRequest();
             final TaskGroupUsage usage = taskGroupUsages.get(task.taskGroupName());
-            if(usage==null)
+            if (usage == null)
                 logger.warn("Unexpected to not find usage for task group " + task.taskGroupName() +
-                        " to unqueueTask usage of task " + task.getId());
+                    " to unqueueTask usage of task " + task.getId());
             else
                 usage.subtractUsage(task);
             if (usageTrackedQueue != null && removed.getTaskRequest() instanceof QueuableTask)
@@ -187,7 +188,7 @@ public class TaskTracker {
 
     boolean addAssignedTask(TaskRequest request, AssignableVirtualMachine avm) {
         final boolean assigned = assignedTasks.put(request.getId(), new ActiveTask(request, avm)) == null;
-        if(assigned) {
+        if (assigned) {
             addUsage(request);
             if (usageTrackedQueue != null && request instanceof QueuableTask)
                 try {
@@ -202,7 +203,7 @@ public class TaskTracker {
 
     private void addUsage(TaskRequest request) {
         TaskGroupUsage usage = taskGroupUsages.get(request.taskGroupName());
-        if(usage==null) {
+        if (usage == null) {
             taskGroupUsages.put(request.taskGroupName(), new TaskGroupUsage(request.taskGroupName()));
             usage = taskGroupUsages.get(request.taskGroupName());
         }
@@ -210,7 +211,7 @@ public class TaskTracker {
     }
 
     void clearAssignedTasks() {
-        for(ActiveTask t: assignedTasks.values())
+        for (ActiveTask t: assignedTasks.values())
             taskGroupUsages.get(t.getTaskRequest().taskGroupName()).subtractUsage(t.getTaskRequest());
         assignedTasks.clear();
     }

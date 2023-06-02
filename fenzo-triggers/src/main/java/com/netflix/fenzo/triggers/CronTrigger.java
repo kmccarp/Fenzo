@@ -36,12 +36,12 @@ public class CronTrigger<T> extends ScheduledTrigger<T> {
 
     @JsonCreator
     public CronTrigger(@JsonProperty("cronExpression") String cronExpression,
-                       @JsonProperty("timeZoneId") String timeZoneId,
-                       @JsonProperty("startAt") Date startAt,
-                       @JsonProperty("name") String name,
-                       @JsonProperty("data") T data,
-                       @JsonProperty("dataType") Class<T> dataType,
-                       @JsonProperty("action") Class<? extends Action1<T>> action) {
+        @JsonProperty("timeZoneId") String timeZoneId,
+        @JsonProperty("startAt") Date startAt,
+        @JsonProperty("name") String name,
+        @JsonProperty("data") T data,
+        @JsonProperty("dataType") Class<T> dataType,
+        @JsonProperty("action") Class<? extends Action1<T>> action) {
         super(name, data, dataType, action, startAt, null);
         this.cronExpression = cronExpression;
         this.timeZoneId = timeZoneId == null || "".equals(timeZoneId) ? "America/Los_Angeles" : timeZoneId;
@@ -49,10 +49,10 @@ public class CronTrigger<T> extends ScheduledTrigger<T> {
     }
 
     public CronTrigger(String cronExpression,
-                       String name,
-                       T data,
-                       Class<T> dataType,
-                       Class<? extends Action1<T>> action) {
+        String name,
+        T data,
+        Class<T> dataType,
+        Class<? extends Action1<T>> action) {
         this(cronExpression, "America/Los_Angeles", new Date(), name, data, dataType, action);
     }
 

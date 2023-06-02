@@ -21,8 +21,8 @@ import java.util.function.Function;
 public class AutoScaleRuleProvider {
 
     static AutoScaleRule createRule(final String name, final int min, final int max, final long coolDownSecs,
-                                    final double cpuTooSmall, final double memoryTooSmall,
-                                    Function<Integer, Integer> shortfallAdjustingFunc) {
+        final double cpuTooSmall, final double memoryTooSmall,
+        Function<Integer, Integer> shortfallAdjustingFunc) {
         return new AutoScaleRule() {
             @Override
             public String getRuleName() {
@@ -57,12 +57,12 @@ public class AutoScaleRuleProvider {
     }
 
     static AutoScaleRule createRule(final String name, final int min, final int max, final long coolDownSecs,
-                                    final double cpuTooSmall, final double memoryTooSmall) {
+        final double cpuTooSmall, final double memoryTooSmall) {
         return createRule(name, min, max, coolDownSecs, cpuTooSmall, memoryTooSmall, Function.identity());
     }
 
     static AutoScaleRule createWithMinSize(final String name, final int min, final int max, final long coolDownSecs,
-                                           final double cpuTooSmall, final double memoryTooSmall, int minSize) {
+        final double cpuTooSmall, final double memoryTooSmall, int minSize) {
         return new AutoScaleRule() {
             @Override
             public String getRuleName() {
@@ -97,7 +97,7 @@ public class AutoScaleRuleProvider {
     }
 
     static AutoScaleRule createWithMaxSize(final String name, final int min, final int max, final long coolDownSecs,
-                                           final double cpuTooSmall, final double memoryTooSmall, int maxSize) {
+        final double cpuTooSmall, final double memoryTooSmall, int maxSize) {
         return new AutoScaleRule() {
             @Override
             public String getRuleName() {

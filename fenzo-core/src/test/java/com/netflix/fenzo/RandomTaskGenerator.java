@@ -38,15 +38,19 @@ public class RandomTaskGenerator {
             this.minRunDurationMillis = minRunDurationMillis;
             this.maxRunDurationMillis = maxRunDurationMillis;
         }
+
         public double getCoreSize() {
             return coreSize;
         }
+
         public double getRatioOfTasks() {
             return ratioOfTasks;
         }
+
         public long getMinRunDurationMillis() {
             return minRunDurationMillis;
         }
+
         public long getMaxRunDurationMillis() {
             return maxRunDurationMillis;
         }
@@ -57,18 +61,22 @@ public class RandomTaskGenerator {
         private final long runUntilMillis;
         private final long runtimeMillis;
         private String hostname;
-        private AssignedResources assignedResources=null;
+        private AssignedResources assignedResources = null;
+
         public GeneratedTask(final TaskRequest taskRequest, final long runtimeMillis, final long runUntilMillis) {
             this.taskRequest = taskRequest;
             this.runUntilMillis = runUntilMillis;
             this.runtimeMillis = runtimeMillis;
         }
+
         public long getRunUntilMillis() {
             return runUntilMillis;
         }
+
         public long getRuntimeMillis() {
             return runtimeMillis;
         }
+
         @Override
         public String getId() {
             return taskRequest.getId();
@@ -83,18 +91,22 @@ public class RandomTaskGenerator {
         public double getCPUs() {
             return taskRequest.getCPUs();
         }
+
         @Override
         public double getMemory() {
             return taskRequest.getMemory();
         }
+
         @Override
         public double getNetworkMbps() {
             return 0.0;
         }
+
         @Override
         public double getDisk() {
             return taskRequest.getDisk();
         }
+
         @Override
         public int getPorts() {
             return taskRequest.getPorts();
@@ -109,14 +121,17 @@ public class RandomTaskGenerator {
         public List<? extends ConstraintEvaluator> getHardConstraints() {
             return taskRequest.getHardConstraints();
         }
+
         @Override
         public List<? extends VMTaskFitnessCalculator> getSoftConstraints() {
             return taskRequest.getSoftConstraints();
         }
+
         @Override
         public void setAssignedResources(AssignedResources assignedResources) {
             this.assignedResources = assignedResources;
         }
+
         @Override
         public AssignedResources getAssignedResources() {
             return assignedResources;
@@ -126,37 +141,40 @@ public class RandomTaskGenerator {
         public Map<String, NamedResourceSetRequest> getCustomNamedResources() {
             return Collections.emptyMap();
         }
+
         @Override
         public int compareTo(GeneratedTask o) {
-            if(o==null)
+            if (o == null)
                 return -1;
             return Long.compare(runUntilMillis, o.runUntilMillis);
         }
+
         public String getHostname() {
             return hostname;
         }
+
         public void setHostname(String hostname) {
             this.hostname = hostname;
         }
     }
 
     private final List<TaskType> taskTypes;
-    private final double memoryPerCore=1000.0;
+    private final double memoryPerCore = 1000.0;
     private final int minTasksPerCoreSizePerBatch;
     private final long interBatchIntervalMillis;
     private double minRatio;
     private final BlockingQueue<GeneratedTask> taskQueue;
 
     RandomTaskGenerator(BlockingQueue<GeneratedTask> taskQueue, long interBatchIntervalMillis, int minTasksPerCoreSizePerBatch, List<TaskType> taskTypes) {
-        if(taskTypes==null || taskTypes.isEmpty())
+        if (taskTypes == null || taskTypes.isEmpty())
             throw new IllegalArgumentException();
         this.taskQueue = taskQueue;
         this.interBatchIntervalMillis = interBatchIntervalMillis;
         this.minTasksPerCoreSizePerBatch = minTasksPerCoreSizePerBatch;
-        minRatio=Double.MAX_VALUE;
+        minRatio = Double.MAX_VALUE;
         this.taskTypes = taskTypes;
-        for(TaskType j: taskTypes)
-            if(j.getRatioOfTasks()<minRatio)
+        for (TaskType j: taskTypes)
+            if (j.getRatioOfTasks() < minRatio)
                 minRatio = j.getRatioOfTasks();
     }
 
@@ -165,14 +183,14 @@ public class RandomTaskGenerator {
             @Override
             public void run() {
                 long now = System.currentTimeMillis();
-                int numTasksGenerated=0;
-                for(TaskType taskType: taskTypes) {
-                    int numTasks = (int) (taskType.getRatioOfTasks()*minTasksPerCoreSizePerBatch/minRatio);
-                    for(int t=0; t<numTasks; t++) {
+                int numTasksGenerated = 0;
+                for (TaskType taskType: taskTypes) {
+                    int numTasks = (int) (taskType.getRatioOfTasks() * minTasksPerCoreSizePerBatch / minRatio);
+                    for (int t = 0; t < numTasks; t++) {
                         long runtime = getRuntime(taskType.minRunDurationMillis, taskType.maxRunDurationMillis);
                         taskQueue.offer(new GeneratedTask(
-                                TaskRequestProvider.getTaskRequest(taskType.coreSize, taskType.coreSize*memoryPerCore, 1),
-                                runtime, now+runtime
+                            TaskRequestProvider.getTaskRequest(taskType.coreSize, taskType.coreSize * memoryPerCore, 1),
+                            runtime, now + runtime
                         ));
                         numTasksGenerated++;
                     }
@@ -185,13 +203,13 @@ public class RandomTaskGenerator {
     List<GeneratedTask> getTasks() {
         List<GeneratedTask> tasks = new ArrayList<>();
         long now = System.currentTimeMillis();
-        for(TaskType taskType: taskTypes) {
-            int numTasks = (int) (taskType.getRatioOfTasks()*minTasksPerCoreSizePerBatch/minRatio);
-            for(int t=0; t<numTasks; t++) {
+        for (TaskType taskType: taskTypes) {
+            int numTasks = (int) (taskType.getRatioOfTasks() * minTasksPerCoreSizePerBatch / minRatio);
+            for (int t = 0; t < numTasks; t++) {
                 long runtime = getRuntime(taskType.minRunDurationMillis, taskType.maxRunDurationMillis);
                 tasks.add(new GeneratedTask(
-                        TaskRequestProvider.getTaskRequest(taskType.coreSize, taskType.coreSize*memoryPerCore, 1),
-                        runtime, now+runtime
+                    TaskRequestProvider.getTaskRequest(taskType.coreSize, taskType.coreSize * memoryPerCore, 1),
+                    runtime, now + runtime
                 ));
             }
         }
@@ -199,6 +217,6 @@ public class RandomTaskGenerator {
     }
 
     private long getRuntime(long minRunDurationMillis, long maxRunDurationMillis) {
-        return minRunDurationMillis + (long)(Math.random() * (double)(maxRunDurationMillis-minRunDurationMillis));
+        return minRunDurationMillis + (long) (Math.random() * (double) (maxRunDurationMillis - minRunDurationMillis));
     }
 }

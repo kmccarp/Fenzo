@@ -56,16 +56,16 @@ public class SampleDataGenerator {
 
     public static ResAllocs createResAllocs(String name, int multiplier) {
         return new ResAllocsBuilder(name)
-                .withCores(1.0 * multiplier)
-                .withMemory(1024 * multiplier)
-                .withNetworkMbps(128 * multiplier)
-                .withDisk(32 * multiplier)
-                .build();
+            .withCores(1.0 * multiplier)
+            .withMemory(1024 * multiplier)
+            .withNetworkMbps(128 * multiplier)
+            .withDisk(32 * multiplier)
+            .build();
     }
 
     public QueuableTask createTask(ResAllocs taskAllocs) {
         return new TestableQueuableTask(taskAllocs.getTaskGroupName(), taskAllocs.getCores(), taskAllocs.getMemory(),
-                taskAllocs.getNetworkMbps(), taskAllocs.getDisk()
+            taskAllocs.getNetworkMbps(), taskAllocs.getDisk()
         );
     }
 

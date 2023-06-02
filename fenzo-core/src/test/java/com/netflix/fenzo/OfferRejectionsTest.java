@@ -37,116 +37,116 @@ public class OfferRejectionsTest {
     private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
 
     private TaskScheduler getScheduler(
-            long offerExpirySecs, final long leaseReOfferDelaySecs,
-            int maxOffersToReject,
-            final BlockingQueue<VirtualMachineLease> offersQ,
-            final Func1<String, VirtualMachineLease> offerGenerator
+        long offerExpirySecs, final long leaseReOfferDelaySecs,
+        int maxOffersToReject,
+        final BlockingQueue<VirtualMachineLease> offersQ,
+        final Func1<String, VirtualMachineLease> offerGenerator
     ) {
         return new TaskScheduler.Builder()
-                .withLeaseRejectAction(
-                        new Action1<VirtualMachineLease>() {
-                            @Override
-                            public void call(final VirtualMachineLease virtualMachineLease) {
-                                executorService.schedule(
-                                        new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                offersQ.offer(offerGenerator.call(virtualMachineLease.hostname()));
-                                            }
-                                        },
-                                        leaseReOfferDelaySecs, TimeUnit.SECONDS);
-                            }
-                        }
-                )
-                .withLeaseOfferExpirySecs(offerExpirySecs)
-                .withMaxOffersToReject(maxOffersToReject)
-                .build();
+            .withLeaseRejectAction(
+                new Action1<VirtualMachineLease>() {
+                    @Override
+                    public void call(final VirtualMachineLease virtualMachineLease) {
+                        executorService.schedule(
+                            new Runnable() {
+                                @Override
+                                public void run() {
+                                    offersQ.offer(offerGenerator.call(virtualMachineLease.hostname()));
+                                }
+                            },
+                            leaseReOfferDelaySecs, TimeUnit.SECONDS);
+                    }
+                }
+            )
+            .withLeaseOfferExpirySecs(offerExpirySecs)
+            .withMaxOffersToReject(maxOffersToReject)
+            .build();
     }
 
     // Test that offers are being rejected by scheduler based on configured offer expiry
     @Test
     public void testOffersAreRejected() throws Exception {
         final BlockingQueue<VirtualMachineLease> offers = new LinkedBlockingQueue<>();
-        long offerExpirySecs=2;
-        long leaseReOfferDelaySecs=1;
+        long offerExpirySecs = 2;
+        long leaseReOfferDelaySecs = 1;
         final AtomicInteger offersGenerated = new AtomicInteger(0);
         final TaskScheduler scheduler = getScheduler(
-                offerExpirySecs, leaseReOfferDelaySecs, 4, offers,
-                new Func1<String, VirtualMachineLease>() {
-                    @Override
-                    public VirtualMachineLease call(String s) {
-                        offersGenerated.incrementAndGet();
-                        return LeaseProvider.getLeaseOffer(s, 4, 4000, 1, 10);
-                    }
+            offerExpirySecs, leaseReOfferDelaySecs, 4, offers,
+            new Func1<String, VirtualMachineLease>() {
+                @Override
+                public VirtualMachineLease call(String s) {
+                    offersGenerated.incrementAndGet();
+                    return LeaseProvider.getLeaseOffer(s, 4, 4000, 1, 10);
                 }
+            }
         );
-        for(int i=0; i<3; i++)
+        for (int i = 0; i < 3; i++)
             offers.offer(LeaseProvider.getLeaseOffer("host" + i, 4, 4000, 1, 10));
-        for(int i=0; i<offerExpirySecs+leaseReOfferDelaySecs+2; i++) {
+        for (int i = 0; i < offerExpirySecs + leaseReOfferDelaySecs + 2; i++) {
             List<VirtualMachineLease> newOffers = new ArrayList<>();
             offers.drainTo(newOffers);
             scheduler.scheduleOnce(Collections.<TaskRequest>emptyList(), newOffers);
             Thread.sleep(1000);
         }
-        Assert.assertTrue("No offer rejections occured", offersGenerated.get()>0);
+        Assert.assertTrue("No offer rejections occured", offersGenerated.get() > 0);
     }
 
     // test that not more than configured number of offers are rejected per configured offer expiry time interval
     @Test
     public void testOffersRejectLimit() throws Exception {
         final BlockingQueue<VirtualMachineLease> offers = new LinkedBlockingQueue<>();
-        long offerExpirySecs=3;
-        long leaseReOfferDelaySecs=2;
-        int maxOffersToReject=2;
-        int numHosts=10;
+        long offerExpirySecs = 3;
+        long leaseReOfferDelaySecs = 2;
+        int maxOffersToReject = 2;
+        int numHosts = 10;
         final AtomicInteger offersGenerated = new AtomicInteger(0);
         final TaskScheduler scheduler = getScheduler(
-                offerExpirySecs, leaseReOfferDelaySecs, maxOffersToReject, offers,
-                new Func1<String, VirtualMachineLease>() {
-                    @Override
-                    public VirtualMachineLease call(String s) {
-                        offersGenerated.incrementAndGet();
-                        return LeaseProvider.getLeaseOffer(s, 4, 4000, 1, 10);
-                    }
+            offerExpirySecs, leaseReOfferDelaySecs, maxOffersToReject, offers,
+            new Func1<String, VirtualMachineLease>() {
+                @Override
+                public VirtualMachineLease call(String s) {
+                    offersGenerated.incrementAndGet();
+                    return LeaseProvider.getLeaseOffer(s, 4, 4000, 1, 10);
                 }
+            }
         );
-        for(int i=0; i<numHosts; i++)
+        for (int i = 0; i < numHosts; i++)
             offers.offer(LeaseProvider.getLeaseOffer("host" + i, 4, 4000, 1, 10));
-        for(int i=0; i<2*(offerExpirySecs+leaseReOfferDelaySecs+2); i++) {
+        for (int i = 0; i < 2 * (offerExpirySecs + leaseReOfferDelaySecs + 2); i++) {
             List<VirtualMachineLease> newOffers = new ArrayList<>();
             offers.drainTo(newOffers);
             final SchedulingResult result = scheduler.scheduleOnce(Collections.<TaskRequest>emptyList(), newOffers);
-            int minIdleHosts = numHosts-maxOffersToReject;
+            int minIdleHosts = numHosts - maxOffersToReject;
             Assert.assertTrue("Idle #hosts should be >= " + minIdleHosts + ", but is " + result.getIdleVMsCount(),
-                    result.getIdleVMsCount() >= minIdleHosts);
+                result.getIdleVMsCount() >= minIdleHosts);
             Thread.sleep(500);
         }
-        Assert.assertTrue("Never rejected any offers", offersGenerated.get()>0);
+        Assert.assertTrue("Never rejected any offers", offersGenerated.get() > 0);
     }
 
     // Test that an offer that is on a host that has another task running form before is considered for expiring.
     @Test
     public void testPartialOfferReject() throws Exception {
-        long offerExpirySecs=3;
-        long leaseReOfferDelaySecs=2;
-        int maxOffersToReject=3;
-        int numHosts=3;
+        long offerExpirySecs = 3;
+        long leaseReOfferDelaySecs = 2;
+        int maxOffersToReject = 3;
+        int numHosts = 3;
         final ConcurrentMap<String, String> hostsRejectedFrom = new ConcurrentHashMap<>();
         final TaskScheduler scheduler = new TaskScheduler.Builder()
-                .withLeaseRejectAction(
-                        new Action1<VirtualMachineLease>() {
-                            @Override
-                            public void call(final VirtualMachineLease virtualMachineLease) {
-                                hostsRejectedFrom.putIfAbsent(virtualMachineLease.hostname(), virtualMachineLease.hostname());
-                            }
-                        }
-                )
-                .withLeaseOfferExpirySecs(offerExpirySecs)
-                .withMaxOffersToReject(maxOffersToReject)
-                .build();
+            .withLeaseRejectAction(
+                new Action1<VirtualMachineLease>() {
+                    @Override
+                    public void call(final VirtualMachineLease virtualMachineLease) {
+                        hostsRejectedFrom.putIfAbsent(virtualMachineLease.hostname(), virtualMachineLease.hostname());
+                    }
+                }
+            )
+            .withLeaseOfferExpirySecs(offerExpirySecs)
+            .withMaxOffersToReject(maxOffersToReject)
+            .build();
         final SchedulingResult result = scheduler.scheduleOnce(
-                Collections.singletonList(TaskRequestProvider.getTaskRequest(1, 1000, 1)),
-                Collections.singletonList(LeaseProvider.getLeaseOffer("host0", 4, 4000, 1, 10))
+            Collections.singletonList(TaskRequestProvider.getTaskRequest(1, 1000, 1)),
+            Collections.singletonList(LeaseProvider.getLeaseOffer("host0", 4, 4000, 1, 10))
         );
         final Map<String, VMAssignmentResult> resultMap = result.getResultMap();
         Assert.assertEquals(1, resultMap.size());
@@ -158,9 +158,9 @@ public class OfferRejectionsTest {
         // add back offer with remaining resources on first host
         leases.add(consumedLease);
         // add new offers from rest of the hosts
-        for(int i=1; i<numHosts; i++)
+        for (int i = 1; i < numHosts; i++)
             leases.add(LeaseProvider.getLeaseOffer("host" + i, 4, 4000, 1, 10));
-        for(int i=0; i<(offerExpirySecs+leaseReOfferDelaySecs); i++) {
+        for (int i = 0; i < (offerExpirySecs + leaseReOfferDelaySecs); i++) {
             scheduler.scheduleOnce(Collections.<TaskRequest>emptyList(), leases);
             leases.clear();
             Thread.sleep(1000L);
@@ -174,14 +174,14 @@ public class OfferRejectionsTest {
     public void testExpiryOfLease() throws Exception {
         final AtomicInteger expireCount = new AtomicInteger();
         final TaskScheduler scheduler = new TaskScheduler.Builder()
-                .withLeaseRejectAction(new Action1<VirtualMachineLease>() {
-                    @Override
-                    public void call(VirtualMachineLease virtualMachineLease) {
-                        expireCount.incrementAndGet();
-                    }
-                })
-                .withLeaseOfferExpirySecs(1000000)
-                .build();
+            .withLeaseRejectAction(new Action1<VirtualMachineLease>() {
+                @Override
+                public void call(VirtualMachineLease virtualMachineLease) {
+                    expireCount.incrementAndGet();
+                }
+            })
+            .withLeaseOfferExpirySecs(1000000)
+            .build();
         final VirtualMachineLease lease1 = LeaseProvider.getLeaseOffer("host1", 2, 2000, 1, 10);
         scheduler.scheduleOnce(Collections.<TaskRequest>emptyList(), Collections.singletonList(lease1));
         Thread.sleep(100);
@@ -196,61 +196,61 @@ public class OfferRejectionsTest {
     @Test
     public void testTimedOfferRejects() throws Exception {
         final AtomicInteger expireCount = new AtomicInteger();
-        final int leaseExpirySecs=2;
+        final int leaseExpirySecs = 2;
         final TaskScheduler scheduler = new TaskScheduler.Builder()
-                .withLeaseRejectAction(new Action1<VirtualMachineLease>() {
-                    @Override
-                    public void call(VirtualMachineLease virtualMachineLease) {
-                        expireCount.incrementAndGet();
-                    }
-                })
-                .withLeaseOfferExpirySecs(leaseExpirySecs)
-                .withRejectAllExpiredOffers()
-                .build();
-        final int nLeases=100;
+            .withLeaseRejectAction(new Action1<VirtualMachineLease>() {
+                @Override
+                public void call(VirtualMachineLease virtualMachineLease) {
+                    expireCount.incrementAndGet();
+                }
+            })
+            .withLeaseOfferExpirySecs(leaseExpirySecs)
+            .withRejectAllExpiredOffers()
+            .build();
+        final int nLeases = 100;
         List<VirtualMachineLease> leases = LeaseProvider.getLeases(nLeases, 4, 4000, 1, 10);
-        for(int i=0; i<leaseExpirySecs; i++) {
+        for (int i = 0; i < leaseExpirySecs; i++) {
             scheduler.scheduleOnce(Collections.<TaskRequest>emptyList(), leases);
             leases.clear();
             Thread.sleep(1000);
         }
         leases = LeaseProvider.getLeases(nLeases, nLeases, 4, 4000, 1, 10);
-        for(int i=0; i<leaseExpirySecs-1; i++) {
+        for (int i = 0; i < leaseExpirySecs - 1; i++) {
             scheduler.scheduleOnce(Collections.<TaskRequest>emptyList(), leases);
             leases.clear();
             Thread.sleep(1000);
         }
         Assert.assertEquals(nLeases, expireCount.get());
-        for(int i=0; i<2; i++) {
+        for (int i = 0; i < 2; i++) {
             scheduler.scheduleOnce(Collections.<TaskRequest>emptyList(), leases);
             leases.clear();
             Thread.sleep(1000);
         }
-        Assert.assertEquals(nLeases*2, expireCount.get());
+        Assert.assertEquals(nLeases * 2, expireCount.get());
     }
 
     // test that all offers of a VM are rejected when one of them expires
     @Test
     public void testRejectAllOffersOfVm() throws Exception {
         final AtomicInteger expireCount = new AtomicInteger();
-        final int leaseExpirySecs=2;
+        final int leaseExpirySecs = 2;
         final Set<String> hostsRejectedFrom = new HashSet<>();
         final AtomicBoolean gotReject = new AtomicBoolean();
         final TaskScheduler scheduler = new TaskScheduler.Builder()
-                .withLeaseRejectAction(virtualMachineLease -> {
-                    expireCount.incrementAndGet();
-                    hostsRejectedFrom.add(virtualMachineLease.hostname());
-                    gotReject.set(true);
-                })
-                .withLeaseOfferExpirySecs(leaseExpirySecs)
-                .withMaxOffersToReject(1)
-                .build();
+            .withLeaseRejectAction(virtualMachineLease -> {
+                expireCount.incrementAndGet();
+                hostsRejectedFrom.add(virtualMachineLease.hostname());
+                gotReject.set(true);
+            })
+            .withLeaseOfferExpirySecs(leaseExpirySecs)
+            .withMaxOffersToReject(1)
+            .build();
         final int nhosts = 2;
         List<VirtualMachineLease> leases = LeaseProvider.getLeases(nhosts, 4, 4000, 1, 10);
         // add the same leases with same hostnames twice again, so there are 3 offers for each of the nHosts.
         leases.addAll(LeaseProvider.getLeases(nhosts, 4, 4000, 1, 10));
         leases.addAll(LeaseProvider.getLeases(nhosts, 4, 4000, 1, 10));
-        for (int i=0; i<leaseExpirySecs+2 && !gotReject.get(); i++) {
+        for (int i = 0; i < leaseExpirySecs + 2 && !gotReject.get(); i++) {
             scheduler.scheduleOnce(Collections.<TaskRequest>emptyList(), leases);
             leases.clear();
             Thread.sleep(1000);

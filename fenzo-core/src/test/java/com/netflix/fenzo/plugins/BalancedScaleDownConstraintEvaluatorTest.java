@@ -34,7 +34,7 @@ public class BalancedScaleDownConstraintEvaluatorTest {
     @Test
     public void testBalancing() throws Exception {
         evaluator = new BalancedScaleDownConstraintEvaluator(
-                this::keyExtractor, 0.5, 0.1
+            this::keyExtractor, 0.5, 0.1
         );
 
         Optional<Map<String, Integer>> context = evaluateAndVerify(leaseWithId("l1"), Optional.empty(), 0.5);
@@ -48,8 +48,8 @@ public class BalancedScaleDownConstraintEvaluatorTest {
     }
 
     private Optional<Map<String, Integer>> evaluateAndVerify(VirtualMachineLease lease,
-                                                             Optional<Map<String, Integer>> context,
-                                                             double expectedScore) {
+        Optional<Map<String, Integer>> context,
+        double expectedScore) {
         Result<Map<String, Integer>> result = evaluator.evaluate(lease, context);
         assertThat(result.getScore(), is(equalTo(expectedScore)));
         return result.getContext();

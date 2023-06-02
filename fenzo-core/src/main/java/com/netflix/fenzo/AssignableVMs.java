@@ -32,28 +32,31 @@ import java.util.stream.Collectors;
 class AssignableVMs {
 
     static class VMRejectLimiter {
-        private long lastRejectAt=0;
+        private long lastRejectAt = 0;
         private int rejectedCount;
         private final int limit;
         private final long rejectDelay;
 
         VMRejectLimiter(int limit, long leaseOfferExpirySecs) {
             this.limit = limit;
-            this.rejectDelay = leaseOfferExpirySecs*1000L;
+            this.rejectDelay = leaseOfferExpirySecs * 1000L;
         }
+
         synchronized boolean reject() {
-            if(rejectedCount==limit)
+            if (rejectedCount == limit)
                 return false;
             rejectedCount++;
             lastRejectAt = System.currentTimeMillis();
             return true;
         }
+
         boolean limitReached() {
             return rejectedCount == limit;
         }
+
         private void reset() {
-            if(System.currentTimeMillis() > (lastRejectAt + rejectDelay))
-                rejectedCount=0;
+            if (System.currentTimeMillis() > (lastRejectAt + rejectDelay))
+                rejectedCount = 0;
         }
     }
 
@@ -84,18 +87,18 @@ class AssignableVMs {
         }
     };
     private final ActiveVmGroups activeVmGroups;
-    private String activeVmGroupAttributeName=null;
+    private String activeVmGroupAttributeName = null;
     private final BlockingQueue<String> unknownLeaseIdsToExpire = new LinkedBlockingQueue<>();
 
     AssignableVMs(TaskTracker taskTracker, Action1<VirtualMachineLease> leaseRejectAction,
-                  PreferentialNamedConsumableResourceEvaluator preferentialNamedConsumableResourceEvaluator,
-                  long leaseOfferExpirySecs, int maxOffersToReject,
-                  String attrNameToGroupMaxResources, boolean singleLeaseMode, String autoScaleByAttributeName) {
+        PreferentialNamedConsumableResourceEvaluator preferentialNamedConsumableResourceEvaluator,
+        long leaseOfferExpirySecs, int maxOffersToReject,
+        String attrNameToGroupMaxResources, boolean singleLeaseMode, String autoScaleByAttributeName) {
         this.taskTracker = taskTracker;
         vmCollection = new VMCollection(
-                hostname -> new AssignableVirtualMachine(preferentialNamedConsumableResourceEvaluator, vmIdToHostnameMap, leaseIdToHostnameMap, hostname,
-                        leaseRejectAction, leaseOfferExpirySecs, taskTracker, singleLeaseMode),
-                autoScaleByAttributeName
+            hostname -> new AssignableVirtualMachine(preferentialNamedConsumableResourceEvaluator, vmIdToHostnameMap, leaseIdToHostnameMap, hostname,
+                leaseRejectAction, leaseOfferExpirySecs, taskTracker, singleLeaseMode),
+            autoScaleByAttributeName
         );
         this.attrNameToGroupMaxResources = attrNameToGroupMaxResources;
         maxResourcesMap = new HashMap<>();
@@ -111,10 +114,10 @@ class AssignableVMs {
     Map<String, List<String>> createPseudoHosts(Map<String, Integer> groupCounts, Func1<String, AutoScaleRule> ruleGetter) {
         return vmCollection.clonePseudoVMsForGroups(groupCounts, ruleGetter, lease ->
             lease != null &&
-                    (lease.getAttributeMap() == null ||
-                            lease.getAttributeMap().get(activeVmGroupAttributeName) == null ||
-                            isInActiveVmGroup(lease.getAttributeMap().get(activeVmGroupAttributeName).getText().getValue())
-                    )
+                (lease.getAttributeMap() == null ||
+                    lease.getAttributeMap().get(activeVmGroupAttributeName) == null ||
+                    isInActiveVmGroup(lease.getAttributeMap().get(activeVmGroupAttributeName).getText().getValue())
+                )
         );
     }
 
@@ -132,7 +135,7 @@ class AssignableVMs {
 
     Map<String, Map<VMResource, Double[]>> getResourceStatus() {
         Map<String, Map<VMResource, Double[]>> result = new HashMap<>();
-        for(AssignableVirtualMachine avm: vmCollection.getAllVMs())
+        for (AssignableVirtualMachine avm: vmCollection.getAllVMs())
             result.put(avm.getHostname(), avm.getResourceStatus());
         return result;
     }
@@ -143,7 +146,7 @@ class AssignableVMs {
 
     void unAssignTask(String taskId, String host) {
         final Optional<AssignableVirtualMachine> vmByName = vmCollection.getVmByName(host);
-        if(vmByName.isPresent()) {
+        if (vmByName.isPresent()) {
             vmByName.get().markTaskForUnassigning(taskId);
         }
         else
@@ -151,27 +154,27 @@ class AssignableVMs {
     }
 
     private int addLeases(List<VirtualMachineLease> leases) {
-        if(logger.isDebugEnabled())
+        if (logger.isDebugEnabled())
             logger.debug("Adding leases");
-        for(AssignableVirtualMachine avm: vmCollection.getAllVMs())
+        for (AssignableVirtualMachine avm: vmCollection.getAllVMs())
             avm.resetResources();
-        int rejected=0;
-        for(VirtualMachineLease l: leases) {
-            if(vmCollection.addLease(l))
+        int rejected = 0;
+        for (VirtualMachineLease l: leases) {
+            if (vmCollection.addLease(l))
                 rejected++;
         }
-        for(AssignableVirtualMachine avm: vmCollection.getAllVMs()) {
-            if(logger.isDebugEnabled())
+        for (AssignableVirtualMachine avm: vmCollection.getAllVMs()) {
+            if (logger.isDebugEnabled())
                 logger.debug("Updating total lease on " + avm.getHostname());
             avm.updateCurrTotalLease();
             final VirtualMachineLease currTotalLease = avm.getCurrTotalLease();
-            if(logger.isDebugEnabled()) {
+            if (logger.isDebugEnabled()) {
                 if (currTotalLease == null)
                     logger.debug("Updated total lease is null for " + avm.getHostname());
                 else {
                     logger.debug("Updated total lease for {} has cpu={}, mem={}, disk={}, network={}",
-                            avm.getHostname(), currTotalLease.cpuCores(), currTotalLease.memoryMB(),
-                            currTotalLease.diskMB(), currTotalLease.networkMbps()
+                        avm.getHostname(), currTotalLease.cpuCores(), currTotalLease.memoryMB(),
+                        currTotalLease.diskMB(), currTotalLease.networkMbps()
                     );
                 }
             }
@@ -181,7 +184,7 @@ class AssignableVMs {
 
     void expireLease(String leaseId) {
         final String hostname = leaseIdToHostnameMap.get(leaseId);
-        if(hostname==null) {
+        if (hostname == null) {
             logger.debug("Received expiry request for an unknown lease: {}", leaseId);
             unknownLeaseIdsToExpire.offer(leaseId);
             return;
@@ -191,8 +194,8 @@ class AssignableVMs {
 
     private void internalExpireLease(String leaseId, String hostname) {
         final Optional<AssignableVirtualMachine> vmByName = vmCollection.getVmByName(hostname);
-        if(vmByName.isPresent()) {
-            if(logger.isDebugEnabled())
+        if (vmByName.isPresent()) {
+            if (logger.isDebugEnabled())
                 logger.debug("Expiring lease offer id " + leaseId + " on host " + hostname);
             vmByName.get().expireLease(leaseId);
         }
@@ -200,12 +203,12 @@ class AssignableVMs {
 
     void expireAllLeases(String hostname) {
         final Optional<AssignableVirtualMachine> vmByName = vmCollection.getVmByName(hostname);
-        if(vmByName.isPresent())
+        if (vmByName.isPresent())
             vmByName.get().expireAllLeases();
     }
 
     void expireAllLeases() {
-        for(AssignableVirtualMachine avm: vmCollection.getAllVMs())
+        for (AssignableVirtualMachine avm: vmCollection.getAllVMs())
             avm.expireAllLeases();
     }
 
@@ -227,7 +230,7 @@ class AssignableVMs {
 
     void enableVM(String host) {
         final Optional<AssignableVirtualMachine> vmByName = vmCollection.getVmByName(host);
-        if(vmByName.isPresent())
+        if (vmByName.isPresent())
             vmByName.get().enable();
         else
             logger.warn("Can't enable host " + host + ", no such host");
@@ -257,9 +260,9 @@ class AssignableVMs {
     private void expireAnyUnknownLeaseIds() {
         List<String> unknownExpiredLeases = new ArrayList<>();
         unknownLeaseIdsToExpire.drainTo(unknownExpiredLeases);
-        for(String leaseId: unknownExpiredLeases) {
+        for (String leaseId: unknownExpiredLeases) {
             final String hostname = leaseIdToHostnameMap.get(leaseId);
-            if(hostname!=null)
+            if (hostname != null)
                 internalExpireLease(leaseId, hostname);
         }
     }
@@ -274,15 +277,15 @@ class AssignableVMs {
         vmRejectLimiter.reset();
         resetTotalResources();
         // ToDo make this parallel maybe?
-        for(AssignableVirtualMachine avm: vmCollection.getAllVMs()) {
+        for (AssignableVirtualMachine avm: vmCollection.getAllVMs()) {
             avm.prepareForScheduling();
-            if(isInActiveVmGroup(avm) && avm.isAssignableNow()) {
+            if (isInActiveVmGroup(avm) && avm.isAssignableNow()) {
                 // for now, only add it if it is available right now
-                if(logger.isDebugEnabled())
+                if (logger.isDebugEnabled())
                     logger.debug("Host " + avm.getHostname() + " available for assignments");
                 vms.add(avm);
             }
-            else if(logger.isDebugEnabled())
+            else if (logger.isDebugEnabled())
                 logger.debug("Host " + avm.getHostname() + " not available for assignments");
             saveMaxResources(avm);
             if (isInActiveVmGroup(avm) && !avm.isDisabled())
@@ -315,17 +318,17 @@ class AssignableVMs {
     }
 
     private void removeExpiredLeases() {
-        for(AssignableVirtualMachine avm: vmCollection.getAllVMs())
+        for (AssignableVirtualMachine avm: vmCollection.getAllVMs())
             avm.removeExpiredLeases(!isInActiveVmGroup(avm));
     }
 
     int removeLimitedLeases(List<VirtualMachineLease> idleResourcesList) {
-        int rejected=0;
+        int rejected = 0;
         List<VirtualMachineLease> randomized = new ArrayList<>(idleResourcesList);
         // randomize the list so we don't always reject leases of the same VM before hitting the reject limit
         Collections.shuffle(randomized);
-        for(VirtualMachineLease lease: randomized) {
-            if(vmRejectLimiter.limitReached())
+        for (VirtualMachineLease lease: randomized) {
+            if (vmRejectLimiter.limitReached())
                 break;
             final Optional<AssignableVirtualMachine> vmByName = vmCollection.getVmByName(lease.hostname());
             if (vmByName.isPresent())
@@ -339,8 +342,8 @@ class AssignableVMs {
     }
 
     void purgeInactiveVMs(Set<String> excludeVms) {
-        for(AssignableVirtualMachine avm: vmCollection.getAllVMs()) {
-            if(avm != null) {
+        for (AssignableVirtualMachine avm: vmCollection.getAllVMs()) {
+            if (avm != null) {
                 if (!excludeVms.contains(avm.getHostname())) {
                     if (!avm.isActive()) {
                         vmCollection.remove(avm);
@@ -354,23 +357,23 @@ class AssignableVMs {
     }
 
     private void saveMaxResources(AssignableVirtualMachine avm) {
-        if(attrNameToGroupMaxResources!=null && !attrNameToGroupMaxResources.isEmpty()) {
+        if (attrNameToGroupMaxResources != null && !attrNameToGroupMaxResources.isEmpty()) {
             String attrValue = avm.getAttrValue(attrNameToGroupMaxResources);
-            if(attrValue !=null) {
+            if (attrValue != null) {
                 Map<VMResource, Double> maxResources = avm.getMaxResources();
                 Map<VMResource, Double> savedMaxResources = maxResourcesMap.get(attrValue);
-                if(savedMaxResources==null) {
+                if (savedMaxResources == null) {
                     savedMaxResources = new HashMap<>();
                     maxResourcesMap.put(attrValue, savedMaxResources);
                 }
-                for(VMResource r: VMResource.values()) {
+                for (VMResource r: VMResource.values()) {
                     switch (r) {
                         case CPU:
                         case Disk:
                         case Memory:
                         case Ports:
                         case Network:
-                            Double savedVal = savedMaxResources.get(r)==null? 0.0 : savedMaxResources.get(r);
+                            Double savedVal = savedMaxResources.get(r) == null ? 0.0 : savedMaxResources.get(r);
                             savedMaxResources.put(r, Math.max(savedVal, maxResources.get(r)));
                     }
                 }
@@ -384,38 +387,38 @@ class AssignableVMs {
 
     AssignmentFailure getFailedMaxResource(String attrValue, TaskRequest task) {
         AssignmentFailure savedFailure = null;
-        for(Map.Entry<String, Map<VMResource, Double>> entry: maxResourcesMap.entrySet()) {
-            if(attrValue!=null && !attrValue.equals(entry.getKey()))
+        for (Map.Entry<String, Map<VMResource, Double>> entry: maxResourcesMap.entrySet()) {
+            if (attrValue != null && !attrValue.equals(entry.getKey()))
                 continue;
             final Map<VMResource, Double> maxResources = entry.getValue();
             AssignmentFailure failure = null;
-            for(VMResource res: VMResource.values()) {
+            for (VMResource res: VMResource.values()) {
                 switch (res) {
                     case CPU:
-                        if(maxResources.get(VMResource.CPU) < task.getCPUs()) {
+                        if (maxResources.get(VMResource.CPU) < task.getCPUs()) {
                             failure = new AssignmentFailure(
-                                    VMResource.CPU, task.getCPUs(), 0.0, maxResources.get(VMResource.CPU), "");
+                                VMResource.CPU, task.getCPUs(), 0.0, maxResources.get(VMResource.CPU), "");
                         }
                         break;
                     case Memory:
-                        if(maxResources.get(VMResource.Memory) < task.getMemory())
+                        if (maxResources.get(VMResource.Memory) < task.getMemory())
                             failure = new AssignmentFailure(
-                                    VMResource.Memory, task.getMemory(), 0.0, maxResources.get(VMResource.Memory), "");
+                                VMResource.Memory, task.getMemory(), 0.0, maxResources.get(VMResource.Memory), "");
                         break;
                     case Disk:
-                        if(maxResources.get(VMResource.Disk) < task.getDisk())
+                        if (maxResources.get(VMResource.Disk) < task.getDisk())
                             failure = new AssignmentFailure(
-                                    VMResource.Disk, task.getDisk(), 0.0, maxResources.get(VMResource.Disk), "");
+                                VMResource.Disk, task.getDisk(), 0.0, maxResources.get(VMResource.Disk), "");
                         break;
                     case Ports:
-                        if(maxResources.get(VMResource.Ports) < task.getPorts())
+                        if (maxResources.get(VMResource.Ports) < task.getPorts())
                             failure = new AssignmentFailure(
-                                    VMResource.Ports, task.getPorts(), 0.0, maxResources.get(VMResource.Ports), "");
+                                VMResource.Ports, task.getPorts(), 0.0, maxResources.get(VMResource.Ports), "");
                         break;
                     case Network:
-                        if(maxResources.get(VMResource.Network) < task.getNetworkMbps())
+                        if (maxResources.get(VMResource.Network) < task.getNetworkMbps())
                             failure = new AssignmentFailure(
-                                    VMResource.Network, task.getNetworkMbps(), 0.0, maxResources.get(VMResource.Network), "");
+                                VMResource.Network, task.getNetworkMbps(), 0.0, maxResources.get(VMResource.Network), "");
                         break;
                     case VirtualMachine:
                     case Fitness:
@@ -426,10 +429,10 @@ class AssignableVMs {
                     default:
                         logger.error("Unknown resource type: " + res);
                 }
-                if(failure!=null)
+                if (failure != null)
                     break;
             }
-            if(failure == null)
+            if (failure == null)
                 return null;
             savedFailure = failure;
         }
@@ -442,7 +445,7 @@ class AssignableVMs {
 
     List<VirtualMachineCurrentState> getVmCurrentStates() {
         List<VirtualMachineCurrentState> result = new ArrayList<>();
-        for(AssignableVirtualMachine avm: vmCollection.getAllVMs())
+        for (AssignableVirtualMachine avm: vmCollection.getAllVMs())
             result.add(avm.getVmCurrentState());
         return result;
     }

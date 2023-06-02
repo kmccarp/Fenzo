@@ -23,7 +23,8 @@ public interface AutoScaleAction {
     /**
      * Indicates whether the autoscale action is to scale up or to scale down.
      */
-    public enum Type {Up, Down};
+    public enum Type {Up, Down
+    }
 
     /**
      * Get the name of the auto scale rule that is triggering the autoscale action.

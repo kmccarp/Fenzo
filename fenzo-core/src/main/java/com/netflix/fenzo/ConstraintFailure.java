@@ -39,7 +39,7 @@ public class ConstraintFailure {
     private final String reason;
 
     @JsonCreator
-    @JsonIgnoreProperties(ignoreUnknown=true)
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public ConstraintFailure(@JsonProperty("name") String name, @JsonProperty("reason") String reason) {
         this.name = name;
         this.reason = reason;
@@ -73,8 +73,8 @@ public class ConstraintFailure {
     @Override
     public String toString() {
         return "ConstraintFailure{" +
-                "name='" + name + '\'' +
-                ", reason='" + reason + '\'' +
-                '}';
+            "name='" + name + '\'' +
+            ", reason='" + reason + '\'' +
+            '}';
     }
 }

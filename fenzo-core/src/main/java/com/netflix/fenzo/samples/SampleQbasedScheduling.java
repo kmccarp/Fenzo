@@ -79,8 +79,8 @@ public class SampleQbasedScheduling {
                 case TASK_FINISHED:
                     System.out.println("Task status for " + status.getTaskId().getValue() + ": " + status.getState());
                     schedSvcGetter.get().removeTask(status.getTaskId().getValue(),
-                            allTasks.get(status.getTaskId().getValue()).getQAttributes(),
-                            tasksToHostnameMap.get(status.getTaskId().getValue()));
+                        allTasks.get(status.getTaskId().getValue()).getQAttributes(),
+                        tasksToHostnameMap.get(status.getTaskId().getValue()));
                     numTasksCompleted.incrementAndGet();
             }
         }
@@ -124,24 +124,24 @@ public class SampleQbasedScheduling {
      * @throws Exception Upon catching any exceptions within the program.
      */
     public static void main(String[] args) throws Exception {
-        if(args.length!=1) {
+        if (args.length != 1) {
             System.err.println("Must provide one argument - Mesos master location string");
             System.exit(1);
         }
-        int numTasks=10;
+        int numTasks = 10;
         final AtomicInteger numTasksCompleted = new AtomicInteger();
 
         // create Fenzo TaskScheduler object.
         final TaskScheduler taskScheduler = new TaskScheduler.Builder()
-                .withFitnessCalculator(BinPackingFitnessCalculators.cpuMemBinPacker)
-                .withLeaseOfferExpirySecs(1000000)
-                .withLeaseRejectAction(new Action1<VirtualMachineLease>() {
-                    @Override
-                    public void call(VirtualMachineLease v) {
-                        System.out.println("Unexpected to reject lease on " + v.hostname());
-                    }
-                })
-                .build();
+            .withFitnessCalculator(BinPackingFitnessCalculators.cpuMemBinPacker)
+            .withLeaseOfferExpirySecs(1000000)
+            .withLeaseRejectAction(new Action1<VirtualMachineLease>() {
+                @Override
+                public void call(VirtualMachineLease v) {
+                    System.out.println("Unexpected to reject lease on " + v.hostname());
+                }
+            })
+            .build();
 
         // Create a queue from Fenzo provided queue implementations.
         final TaskQueue queue = TaskQueues.createTieredQueue(2);
@@ -152,58 +152,58 @@ public class SampleQbasedScheduling {
 
         // create Mesos driver
         Protos.FrameworkInfo framework = Protos.FrameworkInfo.newBuilder()
-                .setName("Sample Fenzo Framework")
-                .setUser("")
-                .build();
+            .setName("Sample Fenzo Framework")
+            .setUser("")
+            .build();
         final MesosSchedulerDriver driver = new MesosSchedulerDriver(mesosSchedulerCallback, framework, args[0]);
 
         // Build Fenzo task scheduling service using the TaskScheduler and TaskQueue objects created above
         final AtomicInteger schedCounter = new AtomicInteger();
         final TaskSchedulingService schedulingService = new TaskSchedulingService.Builder()
-                .withLoopIntervalMillis(1000)
-                .withMaxDelayMillis(1500)
-                .withPreSchedulingLoopHook(new Action0() {
-                    @Override
-                    public void call() {
-                        System.out.println("Starting scheduling iteration " + schedCounter.incrementAndGet());
+            .withLoopIntervalMillis(1000)
+            .withMaxDelayMillis(1500)
+            .withPreSchedulingLoopHook(new Action0() {
+                @Override
+                public void call() {
+                    System.out.println("Starting scheduling iteration " + schedCounter.incrementAndGet());
+                }
+            })
+            .withTaskQueue(queue)
+            .withTaskScheduler(taskScheduler)
+            // TaskSchedulingService will call us back when there are task assignments. Handle them by launching
+            // tasks using MesosDriver
+            .withSchedulingResultCallback(new Action1<SchedulingResult>() {
+                @Override
+                public void call(SchedulingResult schedulingResult) {
+                    final List<Exception> exceptions = schedulingResult.getExceptions();
+                    if (exceptions != null && !exceptions.isEmpty()) {
+                        System.out.println("Exceptions from scheduling iteration:");
+                        for (Exception e: exceptions)
+                            e.printStackTrace();
                     }
-                })
-                .withTaskQueue(queue)
-                .withTaskScheduler(taskScheduler)
-                // TaskSchedulingService will call us back when there are task assignments. Handle them by launching
-                // tasks using MesosDriver
-                .withSchedulingResultCallback(new Action1<SchedulingResult>() {
-                    @Override
-                    public void call(SchedulingResult schedulingResult) {
-                        final List<Exception> exceptions = schedulingResult.getExceptions();
-                        if (exceptions != null && !exceptions.isEmpty()) {
-                            System.out.println("Exceptions from scheduling iteration:");
-                            for (Exception e: exceptions)
-                                e.printStackTrace();
-                        }
-                        else {
-                            for (Map.Entry<String, VMAssignmentResult> e: schedulingResult.getResultMap().entrySet()) {
-                                List<Protos.OfferID> offers = new ArrayList<Protos.OfferID>();
-                                for (VirtualMachineLease l: e.getValue().getLeasesUsed())
-                                    offers.add(l.getOffer().getId());
-                                List<Protos.TaskInfo> taskInfos = new ArrayList<Protos.TaskInfo>();
-                                for (TaskAssignmentResult r: e.getValue().getTasksAssigned()) {
-                                    taskInfos.add(SampleFramework.getTaskInfo(
-                                            e.getValue().getLeasesUsed().iterator().next().getOffer().getSlaveId(),
-                                            r.getTaskId(),
-                                            "sleep 2"
-                                    ));
-                                    tasksToHostnameMap.put(r.getTaskId(), r.getHostname());
-                                }
-                                driver.launchTasks(
-                                        offers,
-                                        taskInfos
-                                );
+                    else {
+                        for (Map.Entry<String, VMAssignmentResult> e: schedulingResult.getResultMap().entrySet()) {
+                            List<Protos.OfferID> offers = new ArrayList<Protos.OfferID>();
+                            for (VirtualMachineLease l: e.getValue().getLeasesUsed())
+                                offers.add(l.getOffer().getId());
+                            List<Protos.TaskInfo> taskInfos = new ArrayList<Protos.TaskInfo>();
+                            for (TaskAssignmentResult r: e.getValue().getTasksAssigned()) {
+                                taskInfos.add(SampleFramework.getTaskInfo(
+                                    e.getValue().getLeasesUsed().iterator().next().getOffer().getSlaveId(),
+                                    r.getTaskId(),
+                                    "sleep 2"
+                                ));
+                                tasksToHostnameMap.put(r.getTaskId(), r.getHostname());
                             }
+                            driver.launchTasks(
+                                offers,
+                                taskInfos
+                            );
                         }
                     }
-                })
-                .build();
+                }
+            })
+            .build();
         schedSvcGetter.set(schedulingService);
 
         // set up action in our scheduler callback to send resource offers into our scheduling service
@@ -227,7 +227,7 @@ public class SampleQbasedScheduling {
         }.start();
 
         // submit some tasks
-        for (int i=0; i<numTasks; i++) {
+        for (int i = 0; i < numTasks; i++) {
             final QueuableTask task = getTask(i);
             allTasks.put(task.getId(), task);
             queue.queueTask(task);

@@ -29,48 +29,52 @@ public class TaskRequestProvider {
     public static TaskRequest getTaskRequest(final double cpus, final double memory, final int ports) {
         return getTaskRequest("", cpus, memory, 0.0, ports, null, null);
     }
+
     public static TaskRequest getTaskRequest(final double cpus, final double memory, double network, final int ports) {
         return getTaskRequest("", cpus, memory, network, ports, null, null);
     }
+
     public static TaskRequest getTaskRequest(final double cpus, final double memory, final int ports,
-                                      final List<? extends ConstraintEvaluator> hardConstraints,
-                                      final List<? extends VMTaskFitnessCalculator> softConstraints) {
+        final List<? extends ConstraintEvaluator> hardConstraints,
+        final List<? extends VMTaskFitnessCalculator> softConstraints) {
         return getTaskRequest("", cpus, memory, 0.0, ports, hardConstraints, softConstraints);
     }
+
     public static TaskRequest getTaskRequest(final String grpName, final double cpus, final double memory, double network, final int ports) {
         return getTaskRequest(grpName, cpus, memory, network, ports, null, null);
     }
+
     public static TaskRequest getTaskRequest(final String grpName, final double cpus, final double memory, final double network, final int ports,
-                                      final List<? extends ConstraintEvaluator> hardConstraints,
-                                      final List<? extends VMTaskFitnessCalculator> softConstraints) {
+        final List<? extends ConstraintEvaluator> hardConstraints,
+        final List<? extends VMTaskFitnessCalculator> softConstraints) {
         return getTaskRequest(grpName, cpus, memory, 0, network, ports, hardConstraints, softConstraints);
     }
 
     public static TaskRequest getTaskRequest(final String grpName, final double cpus, final double memory, final double disk,
-                                      final double network, final int ports,
-                                      final List<? extends ConstraintEvaluator> hardConstraints,
-                                      final List<? extends VMTaskFitnessCalculator> softConstraints) {
+        final double network, final int ports,
+        final List<? extends ConstraintEvaluator> hardConstraints,
+        final List<? extends VMTaskFitnessCalculator> softConstraints) {
         return getTaskRequest(grpName, cpus, memory, disk, network, ports, hardConstraints, softConstraints,
-                Collections.<String, TaskRequest.NamedResourceSetRequest>emptyMap());
+            Collections.<String, TaskRequest.NamedResourceSetRequest>emptyMap());
     }
 
     public static TaskRequest getTaskRequest(final String grpName, final double cpus, final double memory, final double disk,
-                                      final double network, final int ports,
-                                      final List<? extends ConstraintEvaluator> hardConstraints,
-                                      final List<? extends VMTaskFitnessCalculator> softConstraints,
-                                      final Map<String, TaskRequest.NamedResourceSetRequest> resourceSets
+        final double network, final int ports,
+        final List<? extends ConstraintEvaluator> hardConstraints,
+        final List<? extends VMTaskFitnessCalculator> softConstraints,
+        final Map<String, TaskRequest.NamedResourceSetRequest> resourceSets
     ) {
         return getTaskRequest(grpName, cpus, memory, disk, network, ports, hardConstraints, softConstraints, resourceSets, null);
     }
 
     public static TaskRequest getTaskRequest(final String grpName, final double cpus, final double memory, final double disk,
-                                      final double network, final int ports,
-                                      final List<? extends ConstraintEvaluator> hardConstraints,
-                                      final List<? extends VMTaskFitnessCalculator> softConstraints,
-                                      final Map<String, TaskRequest.NamedResourceSetRequest> resourceSets,
-                                      final Map<String, Double> scalarRequests
+        final double network, final int ports,
+        final List<? extends ConstraintEvaluator> hardConstraints,
+        final List<? extends VMTaskFitnessCalculator> softConstraints,
+        final Map<String, TaskRequest.NamedResourceSetRequest> resourceSets,
+        final Map<String, Double> scalarRequests
     ) {
-        final String taskId = ""+id.incrementAndGet();
+        final String taskId = "" + id.incrementAndGet();
         final AtomicReference<TaskRequest.AssignedResources> arRef = new AtomicReference<>();
         return new TaskRequest() {
             @Override

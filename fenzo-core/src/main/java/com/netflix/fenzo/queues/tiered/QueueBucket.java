@@ -64,8 +64,8 @@ class QueueBucket implements UsageTrackedQueue {
         launchedTasks = new LinkedHashMap<>();
         assignedTasks = new LinkedHashMap<>();
         this.allocsShareGetter = allocsShareGetter == null ?
-                (integer, s) -> 1.0 :
-                allocsShareGetter;
+            (integer, s) -> 1.0 :
+            allocsShareGetter;
     }
 
     void setBucketGuarantees(ResAllocs bucketGuarantees) {
@@ -167,7 +167,7 @@ class QueueBucket implements UsageTrackedQueue {
         // If total tier capacity is not available, use current tier allocation as a base for share computation.
         ResAllocs total = tierResources == null ? tierUsage.getResAllocsWrapper() : tierResources;
         return totals.getDominantResUsageFrom(total) /
-                Math.max(TierSla.eps / 10.0, allocsShareGetter.apply(tierNumber, name));
+            Math.max(TierSla.eps / 10.0, allocsShareGetter.apply(tierNumber, name));
     }
 
     @Override

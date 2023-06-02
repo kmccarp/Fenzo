@@ -54,7 +54,7 @@ public class BalancedHostAttrConstraint implements ConstraintEvaluator {
     public BalancedHostAttrConstraint(Func1<String, Set<String>> coTasksGetter, String hostAttributeName, int expectedValues) {
         this.coTasksGetter = coTasksGetter;
         this.hostAttributeName = hostAttributeName;
-        this.name = BalancedHostAttrConstraint.class.getName()+"-"+hostAttributeName;
+        this.name = BalancedHostAttrConstraint.class.getName() + "-" + hostAttributeName;
         this.expectedValues = expectedValues;
     }
 
@@ -74,7 +74,7 @@ public class BalancedHostAttrConstraint implements ConstraintEvaluator {
     public Result evaluate(TaskRequest taskRequest, VirtualMachineCurrentState targetVM, TaskTrackerState taskTrackerState) {
         Set<String> coTasks = coTasksGetter.call(taskRequest.getId());
         String targetHostAttrVal = AttributeUtilities.getAttrValue(targetVM.getCurrAvailableResources(), hostAttributeName);
-        if(targetHostAttrVal==null || targetHostAttrVal.isEmpty()) {
+        if (targetHostAttrVal == null || targetHostAttrVal.isEmpty()) {
             return new Result(false, hostAttributeName + " attribute unavailable on host " + targetVM.getCurrAvailableResources().hostname());
         }
         Map<String, Integer> usedAttribsMap = null;
@@ -84,35 +84,35 @@ public class BalancedHostAttrConstraint implements ConstraintEvaluator {
             return new Result(false, e.getMessage());
         }
         final Integer integer = usedAttribsMap.get(targetHostAttrVal);
-        if(integer==null || usedAttribsMap.isEmpty())
+        if (integer == null || usedAttribsMap.isEmpty())
             return new Result(true, "");
-        int min=Integer.MAX_VALUE;
-        int max=Integer.MIN_VALUE;
-        for(Integer i: usedAttribsMap.values()) {
+        int min = Integer.MAX_VALUE;
+        int max = Integer.MIN_VALUE;
+        for (Integer i: usedAttribsMap.values()) {
             min = Math.min(min, i);
             max = Math.max(max, i);
         }
-        min = expectedValues>usedAttribsMap.size()? 0 : min;
-        if(min == max || integer<max)
+        min = expectedValues > usedAttribsMap.size() ? 0 : min;
+        if (min == max || integer < max)
             return new Result(true, "");
         return new Result(false, "Would further imbalance by host attribute " + hostAttributeName);
     }
 
     private Map<String, Integer> getUsedAttributesMap(Set<String> coTasks, TaskTrackerState taskTrackerState) throws Exception {
         Map<String, Integer> usedAttribsMap = new HashMap<>();
-        for(String coTask: coTasks) {
+        for (String coTask: coTasks) {
             TaskTracker.ActiveTask activeTask = taskTrackerState.getAllRunningTasks().get(coTask);
-            if(activeTask==null)
+            if (activeTask == null)
                 activeTask = taskTrackerState.getAllCurrentlyAssignedTasks().get(coTask);
-            if(activeTask!=null) {
+            if (activeTask != null) {
                 String usedAttrVal = AttributeUtilities.getAttrValue(activeTask.getTotalLease(), hostAttributeName);
-                if(usedAttrVal==null || usedAttrVal.isEmpty())
-                    throw new Exception(hostAttributeName+" attribute unavailable on host " + activeTask.getTotalLease().hostname() +
-                            " running co-task " + coTask); // indicate missing attribute in host
-                if(usedAttribsMap.get(usedAttrVal)==null)
+                if (usedAttrVal == null || usedAttrVal.isEmpty())
+                    throw new Exception(hostAttributeName + " attribute unavailable on host " + activeTask.getTotalLease().hostname() +
+                        " running co-task " + coTask); // indicate missing attribute in host
+                if (usedAttribsMap.get(usedAttrVal) == null)
                     usedAttribsMap.put(usedAttrVal, 1);
                 else
-                    usedAttribsMap.put(usedAttrVal, usedAttribsMap.get(usedAttrVal)+1);
+                    usedAttribsMap.put(usedAttrVal, usedAttribsMap.get(usedAttrVal) + 1);
             }
         }
         return usedAttribsMap;
@@ -138,7 +138,7 @@ public class BalancedHostAttrConstraint implements ConstraintEvaluator {
             @Override
             public double calculateFitness(TaskRequest taskRequest, VirtualMachineCurrentState targetVM, TaskTrackerState taskTrackerState) {
                 String targetHostAttrVal = AttributeUtilities.getAttrValue(targetVM.getCurrAvailableResources(), hostAttributeName);
-                if(targetHostAttrVal==null || targetHostAttrVal.isEmpty()) {
+                if (targetHostAttrVal == null || targetHostAttrVal.isEmpty()) {
                     return 0.0;
                 }
                 Set<String> coTasks = coTasksGetter.call(taskRequest.getId());
@@ -149,16 +149,16 @@ public class BalancedHostAttrConstraint implements ConstraintEvaluator {
                     return 0.0;
                 }
                 final Integer integer = usedAttribsMap.get(targetHostAttrVal);
-                if(integer==null)
+                if (integer == null)
                     return 1.0;
-                if(usedAttribsMap.isEmpty())
+                if (usedAttribsMap.isEmpty())
                     return 1.0;
-                double avg=0.0;
-                for(Integer i: usedAttribsMap.values())
+                double avg = 0.0;
+                for (Integer i: usedAttribsMap.values())
                     avg += i;
-                avg = Math.ceil(avg+1 / Math.max(expectedValues, usedAttribsMap.size()));
-                if(integer<=avg)
-                    return (avg-(double)integer) / avg;
+                avg = Math.ceil(avg + 1 / Math.max(expectedValues, usedAttribsMap.size()));
+                if (integer <= avg)
+                    return (avg - (double) integer) / avg;
                 return 0.0;
             }
         };

@@ -55,8 +55,8 @@ public class BalancedScaleDownConstraintEvaluator implements ScaleDownConstraint
     private final double initialStep;
 
     public BalancedScaleDownConstraintEvaluator(Function<VirtualMachineLease, String> keyExtractor,
-                                                double initialScore,
-                                                double initialStep) {
+        double initialScore,
+        double initialStep) {
         this.keyExtractor = keyExtractor;
         this.initialScore = initialScore;
         this.initialStep = initialStep;

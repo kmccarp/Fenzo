@@ -21,7 +21,7 @@ import java.util.Set;
 
 /**
  * Result of resource assignments for a host (VM). When you call your task scheduler's
- * {@link TaskScheduler#scheduleOnce(java.util.List,java.util.List) scheduleOnce()} method to schedule a set of
+ * {@link TaskScheduler#scheduleOnce(java.util.List, java.util.List) scheduleOnce()} method to schedule a set of
  * tasks, that method returns a {@link SchedulingResult}. That object includes the method
  * {@link SchedulingResult#getResultMap() getResultMap()} which returns a map of host names to
  * {@code VMAssignmentResult} objects. Those objects in turn have the {@link #getLeasesUsed()} and
@@ -72,9 +72,9 @@ public class VMAssignmentResult {
     @Override
     public String toString() {
         return "VMAssignmentResult{" +
-                "hostname='" + hostname + '\'' +
-                ", leasesUsed=" + leasesUsed +
-                ", tasksAssigned=" + tasksAssigned +
-                '}';
+            "hostname='" + hostname + '\'' +
+            ", leasesUsed=" + leasesUsed +
+            ", tasksAssigned=" + tasksAssigned +
+            '}';
     }
 }

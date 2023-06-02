@@ -170,14 +170,14 @@ public class SchedulingResult {
     @Override
     public String toString() {
         return "SchedulingResult{" +
-                "resultMap=" + resultMap +
-                ", failures=" + failures +
-                ", leasesAdded=" + leasesAdded +
-                ", leasesRejected=" + leasesRejected +
-                ", runtime=" + runtime +
-                ", numAllocations=" + numAllocations +
-                ", totalVMsCount=" + totalVMsCount +
-                ", idleVMsCount=" + idleVMsCount +
-                '}';
+            "resultMap=" + resultMap +
+            ", failures=" + failures +
+            ", leasesAdded=" + leasesAdded +
+            ", leasesRejected=" + leasesRejected +
+            ", runtime=" + runtime +
+            ", numAllocations=" + numAllocations +
+            ", totalVMsCount=" + totalVMsCount +
+            ", idleVMsCount=" + idleVMsCount +
+            '}';
     }
 }

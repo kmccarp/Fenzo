@@ -58,7 +58,7 @@ public class AsSoftConstraint {
             }
             @Override
             public double calculateFitness(TaskRequest taskRequest, VirtualMachineCurrentState targetVM, TaskTrackerState taskTrackerState) {
-                return c.evaluate(taskRequest, targetVM, taskTrackerState).isSuccessful()? 1.0 : 0.0;
+                return c.evaluate(taskRequest, targetVM, taskTrackerState).isSuccessful() ? 1.0 : 0.0;
             }
         };
     }

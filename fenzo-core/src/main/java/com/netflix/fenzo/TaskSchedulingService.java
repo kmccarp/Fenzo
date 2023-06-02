@@ -157,92 +157,94 @@ public class TaskSchedulingService {
 
     /* package */ Map<String, Integer> requestPseudoScheduling(final InternalTaskQueue pTaskQueue, Map<String, Integer> groupCounts) {
         Map<String, Integer> pseudoSchedulingResult = new HashMap<>();
+        try {
+            logger.debug("Creating pseudo hosts");
+            final Map<String, List<String>> pseudoHosts = taskScheduler.createPseudoHosts(groupCounts);
+            logger.debug("Created " + pseudoHosts.size() + " pseudoHost groups");
+            int pHostsAdded = 0;
+            for (Map.Entry<String, List<String>> entry: pseudoHosts.entrySet()) {
+                logger.debug("Pseudo hosts for group " + entry.getKey() + ": " + entry.getValue());
+                pHostsAdded += entry.getValue() == null ? 0 : entry.getValue().size();
+            }
             try {
-                logger.debug("Creating pseudo hosts");
-                final Map<String, List<String>> pseudoHosts = taskScheduler.createPseudoHosts(groupCounts);
-                logger.debug("Created " + pseudoHosts.size() + " pseudoHost groups");
-                int pHostsAdded = 0;
-                for(Map.Entry<String, List<String>> entry: pseudoHosts.entrySet()) {
-                    logger.debug("Pseudo hosts for group " + entry.getKey() + ": " + entry.getValue());
-                    pHostsAdded += entry.getValue() == null? 0 : entry.getValue().size();
+                Map<String, String> hostnameToGrpMap = new HashMap<>();
+                for (Map.Entry<String, List<String>> entry: pseudoHosts.entrySet()) {
+                    for (String h: entry.getValue())
+                        hostnameToGrpMap.put(h, entry.getKey());
                 }
                 try {
-                    Map<String, String> hostnameToGrpMap = new HashMap<>();
-                    for (Map.Entry<String, List<String>> entry : pseudoHosts.entrySet()) {
-                        for (String h : entry.getValue())
-                            hostnameToGrpMap.put(h, entry.getKey());
+                    pTaskQueue.reset();
+                } catch (TaskQueueMultiException e) {
+                    final List<Exception> exceptions = e.getExceptions();
+                    if (exceptions == null || exceptions.isEmpty()) {
+                        logger.error("Error with pseudo queue, no details available");
                     }
-                    try {
-                        pTaskQueue.reset();
-                    } catch (TaskQueueMultiException e) {
-                        final List<Exception> exceptions = e.getExceptions();
-                        if (exceptions == null || exceptions.isEmpty()) {
-                            logger.error("Error with pseudo queue, no details available");
-                        } else {
-                            logger.error("Error with pseudo queue, details:");
-                            for (Exception pe : exceptions) {
-                                logger.error("pseudo queue error detail: " + pe.getMessage());
-                            }
+                    else {
+                        logger.error("Error with pseudo queue, details:");
+                        for (Exception pe: exceptions) {
+                            logger.error("pseudo queue error detail: " + pe.getMessage());
                         }
                     }
-                    // temporarily replace usage tracker in taskTracker to the pseudoQ and then put back the original one
-                    taskScheduler.getTaskTracker().setUsageTrackedQueue(pTaskQueue.getUsageTracker());
-                    logger.debug("Scheduling with pseudoQ");
-                    final SchedulingResult schedulingResult = taskScheduler.pseudoScheduleOnce(pTaskQueue);
-                    final Map<String, VMAssignmentResult> resultMap = schedulingResult.getResultMap();
-                    Map<String, Integer> result = new HashMap<>();
-                    if (!resultMap.isEmpty()) {
-                        for (String h : resultMap.keySet()) {
-                            final String grp = hostnameToGrpMap.get(h);
-                            if (grp != null) {
-                                Integer count = result.get(grp);
-                                if (count == null)
-                                    result.put(grp, 1);
-                                else
-                                    result.put(grp, count + 1);
-                            }
+                }
+                // temporarily replace usage tracker in taskTracker to the pseudoQ and then put back the original one
+                taskScheduler.getTaskTracker().setUsageTrackedQueue(pTaskQueue.getUsageTracker());
+                logger.debug("Scheduling with pseudoQ");
+                final SchedulingResult schedulingResult = taskScheduler.pseudoScheduleOnce(pTaskQueue);
+                final Map<String, VMAssignmentResult> resultMap = schedulingResult.getResultMap();
+                Map<String, Integer> result = new HashMap<>();
+                if (!resultMap.isEmpty()) {
+                    for (String h: resultMap.keySet()) {
+                        final String grp = hostnameToGrpMap.get(h);
+                        if (grp != null) {
+                            Integer count = result.get(grp);
+                            if (count == null)
+                                result.put(grp, 1);
+                            else
+                                result.put(grp, count + 1);
                         }
                     }
-                    else if(pHostsAdded > 0) {
-                        logger.debug("No pseudo assignments made, looking for failures");
-                        final Map<TaskRequest, List<TaskAssignmentResult>> failures = schedulingResult.getFailures();
-                        if (failures == null || failures.isEmpty()) {
-                            logger.debug("No failures found for pseudo assignments");
-                        } else {
-                            for (Map.Entry<TaskRequest, List<TaskAssignmentResult>> entry: failures.entrySet()) {
-                                final List<TaskAssignmentResult> tars = entry.getValue();
-                                if (tars == null || tars.isEmpty())
-                                    logger.debug("No pseudo assignment failures for task " + entry.getKey());
-                                else {
-                                    StringBuilder b = new StringBuilder("Pseudo assignment failures for task ").append(entry.getKey()).append(": ");
-                                    for (TaskAssignmentResult r: tars) {
-                                        b.append("HOST: ").append(r.getHostname()).append(":");
-                                        final List<AssignmentFailure> afs = r.getFailures();
-                                        if (afs != null && !afs.isEmpty())
-                                            afs.forEach(af -> b.append(af.getMessage()).append("; "));
-                                        else
-                                            b.append("None").append(";");
-                                    }
-                                    logger.debug(b.toString());
+                }
+                else if (pHostsAdded > 0) {
+                    logger.debug("No pseudo assignments made, looking for failures");
+                    final Map<TaskRequest, List<TaskAssignmentResult>> failures = schedulingResult.getFailures();
+                    if (failures == null || failures.isEmpty()) {
+                        logger.debug("No failures found for pseudo assignments");
+                    }
+                    else {
+                        for (Map.Entry<TaskRequest, List<TaskAssignmentResult>> entry: failures.entrySet()) {
+                            final List<TaskAssignmentResult> tars = entry.getValue();
+                            if (tars == null || tars.isEmpty())
+                                logger.debug("No pseudo assignment failures for task " + entry.getKey());
+                            else {
+                                StringBuilder b = new StringBuilder("Pseudo assignment failures for task ").append(entry.getKey()).append(": ");
+                                for (TaskAssignmentResult r: tars) {
+                                    b.append("HOST: ").append(r.getHostname()).append(":");
+                                    final List<AssignmentFailure> afs = r.getFailures();
+                                    if (afs != null && !afs.isEmpty())
+                                        afs.forEach(af -> b.append(af.getMessage()).append("; "));
+                                    else
+                                        b.append("None").append(";");
                                 }
+                                logger.debug(b.toString());
                             }
                         }
                     }
-                    pseudoSchedulingResult = result;
                 }
-                catch (Exception e) {
-                    logger.error("Error in pseudo scheduling", e);
-                    throw e;
-                }
-                finally {
-                    taskScheduler.removePseudoHosts(pseudoHosts);
-                    taskScheduler.removePseudoAssignments();
-                    taskScheduler.getTaskTracker().setUsageTrackedQueue(taskQueue.getUsageTracker());
-                }
+                pseudoSchedulingResult = result;
             }
             catch (Exception e) {
                 logger.error("Error in pseudo scheduling", e);
+                throw e;
             }
+            finally {
+                taskScheduler.removePseudoHosts(pseudoHosts);
+                taskScheduler.removePseudoAssignments();
+                taskScheduler.getTaskTracker().setUsageTrackedQueue(taskQueue.getUsageTracker());
+            }
+        }
+        catch (Exception e) {
+            logger.error("Error in pseudo scheduling", e);
+        }
         return pseudoSchedulingResult;
     }
 
@@ -357,7 +359,7 @@ public class TaskSchedulingService {
     }
 
     private void assignTasks(SchedulingResult schedulingResult, TaskScheduler taskScheduler) {
-        if(!schedulingResult.getResultMap().isEmpty()) {
+        if (!schedulingResult.getResultMap().isEmpty()) {
             for (VMAssignmentResult result: schedulingResult.getResultMap().values()) {
                 for (TaskAssignmentResult t: result.getTasksAssigned()) {
                     taskScheduler.getTaskAssignerIntl().call(t.getRequest(), result.getHostname());
@@ -382,7 +384,7 @@ public class TaskSchedulingService {
      */
     public void addLeases(List<? extends VirtualMachineLease> leases) {
         if (leases != null && !leases.isEmpty()) {
-            for(VirtualMachineLease l: leases)
+            for (VirtualMachineLease l: leases)
                 leaseBlockingQueue.offer(l);
         }
     }

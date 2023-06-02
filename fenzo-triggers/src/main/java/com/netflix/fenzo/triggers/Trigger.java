@@ -26,7 +26,7 @@ import java.util.Date;
 /**
  * Base class for all types of triggers
  */
-@JsonTypeInfo(use=JsonTypeInfo.Id.CLASS, include=JsonTypeInfo.As.PROPERTY, property="@class")
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
 public class Trigger<T> {
 
     private String id;
@@ -39,9 +39,9 @@ public class Trigger<T> {
 
     @JsonCreator
     public Trigger(@JsonProperty("name") String name,
-                   @JsonProperty("data") T data,
-                   @JsonProperty("dataType") Class<T> dataType,
-                   @JsonProperty("action") Class<? extends Action1<T>> action) {
+        @JsonProperty("data") T data,
+        @JsonProperty("dataType") Class<T> dataType,
+        @JsonProperty("action") Class<? extends Action1<T>> action) {
         this.createdDate = new Date();
         this.name = name;
         this.data = data;

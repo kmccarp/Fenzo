@@ -54,8 +54,8 @@ class ScaleDownConstraintExecutor {
         List<Set<VirtualMachineLease>> fixedOrder = orderEvaluator.evaluate(candidates);
 
         List<VirtualMachineLease> scaleDownOrder = scoringEvaluators.isEmpty()
-                ? fixedOrder.stream().flatMap(Set::stream).collect(Collectors.toList())
-                : fixedOrder.stream().flatMap(this::groupEvaluator).collect(Collectors.toList());
+            ? fixedOrder.stream().flatMap(Set::stream).collect(Collectors.toList())
+            : fixedOrder.stream().flatMap(this::groupEvaluator).collect(Collectors.toList());
 
         if (logger.isDebugEnabled()) {
             List<String> hosts = scaleDownOrder.stream().map(VirtualMachineLease::hostname).collect(Collectors.toList());
@@ -67,9 +67,9 @@ class ScaleDownConstraintExecutor {
 
     private void checkArguments(Map<ScaleDownConstraintEvaluator, Double> weightedScoringEvaluators) {
         List<String> evaluatorsWithInvalidWeights = weightedScoringEvaluators.entrySet().stream()
-                .filter(e -> e.getValue() <= 0)
-                .map(e -> e.getKey().getName() + '=' + e.getValue())
-                .collect(Collectors.toList());
+            .filter(e -> e.getValue() <= 0)
+            .map(e -> e.getKey().getName() + '=' + e.getValue())
+            .collect(Collectors.toList());
         if (!evaluatorsWithInvalidWeights.isEmpty()) {
             throw new IllegalArgumentException("Evaluator weighs must be > 0. This invariant is violated by " + evaluatorsWithInvalidWeights);
         }
@@ -80,14 +80,15 @@ class ScaleDownConstraintExecutor {
 
         scoringEvaluators.forEach((e, weight) -> {
             Optional<? super Object> optionalContext = Optional.empty();
-            for (VirtualMachineLease lease : groupCandidates) {
+            for (VirtualMachineLease lease: groupCandidates) {
                 double currentScore = scores.getOrDefault(lease, 0.0);
                 if (currentScore != NOT_REMOVABLE_MARKER) {
                     ScaleDownConstraintEvaluator.Result result = e.evaluate(lease, optionalContext);
                     double newScore = result.getScore() * weight;
                     if (newScore == 0) {
                         scores.put(lease, NOT_REMOVABLE_MARKER);
-                    } else {
+                    }
+                    else {
                         scores.put(lease, currentScore + newScore);
                     }
                     optionalContext = result.getContext();
@@ -96,8 +97,8 @@ class ScaleDownConstraintExecutor {
         });
 
         return scores.entrySet().stream()
-                .filter(e -> e.getValue() != NOT_REMOVABLE_MARKER)
-                .sorted((e1, e2) -> Double.compare(e2.getValue(), e1.getValue())) // Descending order
-                .map(Map.Entry::getKey);
+            .filter(e -> e.getValue() != NOT_REMOVABLE_MARKER)
+            .sorted((e1, e2) -> Double.compare(e2.getValue(), e1.getValue())) // Descending order
+            .map(Map.Entry::getKey);
     }
 }

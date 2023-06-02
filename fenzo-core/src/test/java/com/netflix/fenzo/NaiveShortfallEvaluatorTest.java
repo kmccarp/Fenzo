@@ -28,12 +28,12 @@ public class NaiveShortfallEvaluatorTest {
     private static final Set<String> ATTR_KEYS = new HashSet<>(asList(HOST_ATTR_VAL, ADJUSTED_HOST_ATTR_VAL));
 
     private static final AutoScaleRule STD_RULE = AutoScaleRuleProvider.createRule(
-            HOST_ATTR_VAL, 0, 10, 600, CPU / 2, MEMORY / 2
+        HOST_ATTR_VAL, 0, 10, 600, CPU / 2, MEMORY / 2
     );
 
     private static final AutoScaleRule ADJUSTED_RULE = AutoScaleRuleProvider.createRule(
-            ADJUSTED_HOST_ATTR_VAL, 0, 10, 600, CPU / 2, MEMORY / 2,
-            numberOfAgents -> numberOfAgents / 2
+        ADJUSTED_HOST_ATTR_VAL, 0, 10, 600, CPU / 2, MEMORY / 2,
+        numberOfAgents -> numberOfAgents / 2
     );
 
     private final AutoScaleRules autoScaleRules = new AutoScaleRules(asList(STD_RULE, ADJUSTED_RULE));
@@ -45,15 +45,15 @@ public class NaiveShortfallEvaluatorTest {
     @Before
     public void setUp() throws Exception {
         shortfallEvaluator.setTaskToClustersGetter(task ->
-                singletonList(task.getId().contains("adjusted") ? ADJUSTED_HOST_ATTR_VAL : HOST_ATTR_VAL)
+            singletonList(task.getId().contains("adjusted") ? ADJUSTED_HOST_ATTR_VAL : HOST_ATTR_VAL)
         );
     }
 
     @Test
     public void testShortfallAdjusting() throws Exception {
         Set<TaskRequest> failedTasks = new HashSet<>(asList(
-                createFailedTask("std#1"), createFailedTask("std#2"),
-                createFailedTask("adjusted#1"), createFailedTask("adjusted#2")
+            createFailedTask("std#1"), createFailedTask("std#2"),
+            createFailedTask("adjusted#1"), createFailedTask("adjusted#2")
         ));
         Map<String, Integer> shortfall = shortfallEvaluator.getShortfall(ATTR_KEYS, failedTasks, autoScaleRules);
 

@@ -45,11 +45,11 @@ public class TaskAssignmentResult {
     @JsonCreator
     @JsonIgnoreProperties(ignoreUnknown = true)
     TaskAssignmentResult(@JsonProperty("avm") AssignableVirtualMachine avm,
-                         @JsonProperty("request") TaskRequest request,
-                         @JsonProperty("successful") boolean successful,
-                         @JsonProperty("failures") List<AssignmentFailure> failures,
-                         @JsonProperty("constraintFailure") ConstraintFailure constraintFailure,
-                         @JsonProperty("fitness") double fitness) {
+        @JsonProperty("request") TaskRequest request,
+        @JsonProperty("successful") boolean successful,
+        @JsonProperty("failures") List<AssignmentFailure> failures,
+        @JsonProperty("constraintFailure") ConstraintFailure constraintFailure,
+        @JsonProperty("fitness") double fitness) {
         this.avm = avm;
         this.request = request;
         this.taskId = request.getId();
@@ -168,15 +168,15 @@ public class TaskAssignmentResult {
     @Override
     public String toString() {
         return "TaskAssignmentResult{" +
-                "host=" + avm.getHostname() +
-                ", request=" + request +
-                ", taskId='" + taskId + '\'' +
-                ", hostname='" + hostname + '\'' +
-                ", assignedPorts=" + assignedPorts +
-                ", successful=" + successful +
-                ", failures=" + failures +
-                ", constraintFailure=" + constraintFailure +
-                ", fitness=" + fitness +
-                '}';
+            "host=" + avm.getHostname() +
+            ", request=" + request +
+            ", taskId='" + taskId + '\'' +
+            ", hostname='" + hostname + '\'' +
+            ", assignedPorts=" + assignedPorts +
+            ", successful=" + successful +
+            ", failures=" + failures +
+            ", constraintFailure=" + constraintFailure +
+            ", fitness=" + fitness +
+            '}';
     }
 }

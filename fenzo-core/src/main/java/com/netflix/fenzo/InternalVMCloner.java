@@ -43,7 +43,7 @@ import org.apache.mesos.Protos;
         final Map<String, Double> scalars = new HashMap<>();
         final Map<String, Protos.Attribute> attributeMap = new HashMap<>();
         if (avms != null) {
-            for (AssignableVirtualMachine avm : avms) {
+            for (AssignableVirtualMachine avm: avms) {
                 Map<VMResource, Double> maxResources = avm.getMaxResources();
                 Double value = maxResources.get(VMResource.CPU);
                 if (value != null) {
@@ -67,7 +67,7 @@ import org.apache.mesos.Protos;
                 }
                 final Map<String, Double> maxScalars = avm.getMaxScalars();
                 if (maxScalars != null && !maxScalars.isEmpty()) {
-                    for (String k : maxScalars.keySet())
+                    for (String k: maxScalars.keySet())
                         scalars.compute(k, (s, oldVal) -> {
                             if (oldVal == null) {
                                 oldVal = 0.0;
@@ -81,7 +81,7 @@ import org.apache.mesos.Protos;
                 }
                 final Map<String, Protos.Attribute> attrs = avm.getCurrTotalLease().getAttributeMap();
                 if (attrs != null && !attrs.isEmpty()) {
-                    for (Map.Entry<String, Protos.Attribute> e : attrs.entrySet())
+                    for (Map.Entry<String, Protos.Attribute> e: attrs.entrySet())
                         attributeMap.putIfAbsent(e.getKey(), e.getValue());
                 }
             }
@@ -91,7 +91,7 @@ import org.apache.mesos.Protos;
         final double fdisk = disk;
         final double fnetwork = network;
         final List<VirtualMachineLease.Range> fports = Collections.singletonList(
-                new VirtualMachineLease.Range(100, 100 + (int) ports));
+            new VirtualMachineLease.Range(100, 100 + (int) ports));
         return new VirtualMachineLease() {
             @Override
             public String getId() {
@@ -164,7 +164,7 @@ import org.apache.mesos.Protos;
         final List<VirtualMachineLease.Range> ports = new LinkedList<>();
         final List<VirtualMachineLease.Range> ranges = lease.portRanges();
         if (ranges != null && !ranges.isEmpty()) {
-            for (VirtualMachineLease.Range r : ranges)
+            for (VirtualMachineLease.Range r: ranges)
                 ports.add(new VirtualMachineLease.Range(r.getBeg(), r.getEnd()));
         }
         final double cpus = lease.cpuCores();

@@ -32,10 +32,10 @@ public class SpreadingSchedulerTests {
 
     private TaskScheduler getScheduler(VMTaskFitnessCalculator fitnessCalculator) {
         return new TaskScheduler.Builder()
-                .withFitnessCalculator(fitnessCalculator)
-                .withLeaseOfferExpirySecs(1000000)
-                .withLeaseRejectAction(virtualMachineLease -> logger.info("Rejecting lease on " + virtualMachineLease.hostname()))
-                .build();
+            .withFitnessCalculator(fitnessCalculator)
+            .withLeaseOfferExpirySecs(1000000)
+            .withLeaseRejectAction(virtualMachineLease -> logger.info("Rejecting lease on " + virtualMachineLease.hostname()))
+            .build();
     }
 
     /**
@@ -91,7 +91,7 @@ public class SpreadingSchedulerTests {
         Assert.assertEquals(resultMap.size(), numberOfInstances);
 
         Map<String, Long> assignmentCountPerHost = resultMap.values().stream().collect(Collectors.groupingBy(
-                VMAssignmentResult::getHostname, Collectors.counting()));
+            VMAssignmentResult::getHostname, Collectors.counting()));
 
         boolean duplicates = assignmentCountPerHost.entrySet().stream().anyMatch(e -> e.getValue() > 1);
         Assert.assertEquals(duplicates, false);

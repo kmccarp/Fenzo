@@ -52,7 +52,7 @@ public class TieredQueue implements InternalTaskQueue {
      */
     public TieredQueue(int numTiers) {
         tiers = new ArrayList<>(numTiers);
-        for ( int i=0; i<numTiers; i++ )
+        for (int i = 0; i < numTiers; i++)
             tiers.add(new Tier(i, allocsShareGetter));
         tasksToQueue = new LinkedBlockingQueue<>();
         slasQueue = new LinkedBlockingQueue<>();
@@ -71,16 +71,16 @@ public class TieredQueue implements InternalTaskQueue {
     public void setSla(TaskQueueSla sla) throws IllegalArgumentException {
         if (sla != null && !(sla instanceof TieredQueueSlas)) {
             throw new IllegalArgumentException("Queue SLA must be an instance of " + TieredQueueSlas.class.getName() +
-                    ", can't accept " + sla.getClass().getName());
+                ", can't accept " + sla.getClass().getName());
         }
-        slasQueue.offer(sla == null? new TieredQueueSlas(Collections.emptyMap(), Collections.emptyMap()) : (TieredQueueSlas)sla);
+        slasQueue.offer(sla == null ? new TieredQueueSlas(Collections.emptyMap(), Collections.emptyMap()) : (TieredQueueSlas) sla);
     }
 
     private void setSlaInternal() {
         if (slasQueue.peek() != null) {
             List<TieredQueueSlas> slas = new ArrayList<>();
             slasQueue.drainTo(slas);
-            tierSlas.setAllocations(slas.get(slas.size()-1)); // set the last one
+            tierSlas.setAllocations(slas.get(slas.size() - 1)); // set the last one
 
             tiers.forEach(tier -> tier.setTierSla(tierSlas.getTierSla(tier.getTierNumber())));
         }
@@ -88,7 +88,7 @@ public class TieredQueue implements InternalTaskQueue {
 
     private void addInternal(QueuableTask task) throws TaskQueueException {
         final int tierNumber = task.getQAttributes().getTierNumber();
-        if ( tierNumber >= tiers.size() )
+        if (tierNumber >= tiers.size())
             throw new InvalidTierNumberException(tierNumber, tiers.size());
         tiers.get(tierNumber).queueTask(task);
     }
@@ -116,7 +116,7 @@ public class TieredQueue implements InternalTaskQueue {
             currTier = null; // currTier all done
         }
         while (currTier == null && iterator.hasNext()) {
-            if(iterator.hasNext()) {
+            if (iterator.hasNext()) {
                 currTier = iterator.next();
                 final Assignable<QueuableTask> taskOrFailure = currTier.nextTaskToLaunch();
                 if (taskOrFailure != null)
@@ -138,7 +138,7 @@ public class TieredQueue implements InternalTaskQueue {
             final List<QueuableTask> toQueue = new LinkedList<>();
             tasksToQueue.drainTo(toQueue);
             if (!toQueue.isEmpty()) {
-                for (QueuableTask t : toQueue)
+                for (QueuableTask t: toQueue)
                     try {
                         addInternal(t);
                         queueChanged = true;
@@ -198,7 +198,7 @@ public class TieredQueue implements InternalTaskQueue {
 
             @Override
             public void reset() {
-                for(Tier tb: tiers)
+                for (Tier tb: tiers)
                     tb.reset();
             }
 

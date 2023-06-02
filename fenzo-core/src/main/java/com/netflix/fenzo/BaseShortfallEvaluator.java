@@ -53,7 +53,7 @@ abstract class BaseShortfallEvaluator implements ShortfallEvaluator {
     protected void reset() {
         long tooOld = System.currentTimeMillis() - TOO_OLD_THRESHOLD_MILLIS;
         Set<String> tasks = new HashSet<>(requestedForTasksSet.keySet());
-        for (String t : tasks) {
+        for (String t: tasks) {
             if (requestedForTasksSet.get(t) < tooOld)
                 requestedForTasksSet.remove(t);
         }
@@ -64,15 +64,15 @@ abstract class BaseShortfallEvaluator implements ShortfallEvaluator {
             return Collections.emptyList();
         long now = System.currentTimeMillis();
         return original.stream()
-                .filter(t -> requestedForTasksSet.putIfAbsent(t.getId(), now) == null)
-                .collect(Collectors.toList());
+            .filter(t -> requestedForTasksSet.putIfAbsent(t.getId(), now) == null)
+            .collect(Collectors.toList());
     }
 
     protected Map<String, Integer> fillShortfallMap(Set<String> attrKeys, Collection<TaskRequest> requests) {
         Map<String, Integer> shortfallMap = new HashMap<>();
         if (requests != null && !requests.isEmpty()) {
             for (TaskRequest r: requests) {
-                for (String k : attrKeys) {
+                for (String k: attrKeys) {
                     if (matchesTask(r, k)) {
                         if (shortfallMap.get(k) == null)
                             shortfallMap.put(k, 1);
@@ -90,7 +90,7 @@ abstract class BaseShortfallEvaluator implements ShortfallEvaluator {
             return true;
         final List<String> strings = taskToClustersGetter.call((QueuableTask) r);
         if (strings != null && !strings.isEmpty()) {
-            for (String s : strings)
+            for (String s: strings)
                 if (k.equals(s))
                     return true;
             return false; // doesn't match

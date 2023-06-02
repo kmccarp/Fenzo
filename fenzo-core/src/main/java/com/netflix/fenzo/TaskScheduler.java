@@ -498,7 +498,8 @@ public class TaskScheduler {
                 if (weightedScaleDownConstraintEvaluators != null) {
                     scaleDownOrderEvaluator = new NoOpScaleDownOrderEvaluator();
                 }
-            } else {
+            }
+            else {
                 if (weightedScaleDownConstraintEvaluators == null) {
                     weightedScaleDownConstraintEvaluators = Collections.emptyMap();
                 }
@@ -552,17 +553,17 @@ public class TaskScheduler {
         taskTracker = new TaskTracker();
         resAllocsEvaluator = new ResAllocsEvaluater(taskTracker, builder.resAllocs);
         assignableVMs = new AssignableVMs(taskTracker, builder.leaseRejectAction, builder.preferentialNamedConsumableResourceEvaluator,
-                builder.leaseOfferExpirySecs, builder.maxOffersToReject, builder.autoScaleByAttributeName,
-                builder.singleOfferMode, builder.autoScaleByAttributeName);
+            builder.leaseOfferExpirySecs, builder.maxOffersToReject, builder.autoScaleByAttributeName,
+            builder.singleOfferMode, builder.autoScaleByAttributeName);
         if (builder.autoScaleByAttributeName != null && !builder.autoScaleByAttributeName.isEmpty()) {
 
             ScaleDownConstraintExecutor scaleDownConstraintExecutor = builder.scaleDownOrderEvaluator == null
-                    ? null : new ScaleDownConstraintExecutor(builder.scaleDownOrderEvaluator, builder.weightedScaleDownConstraintEvaluators);
+                ? null : new ScaleDownConstraintExecutor(builder.scaleDownOrderEvaluator, builder.weightedScaleDownConstraintEvaluators);
             autoScaler = new AutoScaler(builder.autoScaleByAttributeName, builder.autoScalerMapHostnameAttributeName,
-                    builder.autoScaleDownBalancedByAttributeName,
-                    builder.autoScaleRules, assignableVMs,
-                    builder.disableShortfallEvaluation, assignableVMs.getActiveVmGroups(),
-                    assignableVMs.getVmCollection(), scaleDownConstraintExecutor);
+                builder.autoScaleDownBalancedByAttributeName,
+                builder.autoScaleRules, assignableVMs,
+                builder.disableShortfallEvaluation, assignableVMs.getActiveVmGroups(),
+                assignableVMs.getVmCollection(), scaleDownConstraintExecutor);
             if (builder.autoscalerCallback != null) {
                 autoScaler.setCallback(builder.autoscalerCallback);
             }
@@ -575,7 +576,8 @@ public class TaskScheduler {
             if (builder.disabledVmDurationInSecs > 0L) {
                 autoScaler.setDisabledVmDurationInSecs(builder.disabledVmDurationInSecs);
             }
-        } else {
+        }
+        else {
             autoScaler = null;
         }
         assignableVMsEvaluator = builder.assignableVMsEvaluator == null ? avms -> avms : builder.assignableVMsEvaluator;
@@ -617,7 +619,7 @@ public class TaskScheduler {
             TaskAssignmentResult res = results.get(r);
             if (res != null && res.isSuccessful()) {
                 if (bestResult == null || res.getFitness() > bestFitness ||
-                        (res.getFitness() == bestFitness && res.getHostname().compareTo(bestResult.getHostname()) < 0)) {
+                    (res.getFitness() == bestFitness && res.getHostname().compareTo(bestResult.getHostname()) < 0)) {
                     bestFitness = res.getFitness();
                     bestResult = res;
                 }
@@ -761,15 +763,15 @@ public class TaskScheduler {
      *                               via the {@link #shutdown()} method.
      */
     public SchedulingResult scheduleOnce(
-            List<? extends TaskRequest> requests,
-            List<VirtualMachineLease> newLeases) throws IllegalStateException {
+        List<? extends TaskRequest> requests,
+        List<VirtualMachineLease> newLeases) throws IllegalStateException {
         if (usingSchedulingService) {
             throw new IllegalStateException(usingSchedSvcMesg);
         }
         final Iterator<? extends TaskRequest> iterator =
-                requests != null ?
-                        requests.iterator() :
-                        Collections.<TaskRequest>emptyIterator();
+            requests != null ?
+                requests.iterator() :
+                Collections.<TaskRequest>emptyIterator();
         TaskIterator taskIterator = () -> {
             if (iterator.hasNext()) {
                 return Assignable.success(iterator.next());
@@ -792,8 +794,8 @@ public class TaskScheduler {
      *                               via the {@link #shutdown()} method.
      */
     /* package */ SchedulingResult scheduleOnce(
-            TaskIterator taskIterator,
-            List<VirtualMachineLease> newLeases) throws IllegalStateException {
+        TaskIterator taskIterator,
+        List<VirtualMachineLease> newLeases) throws IllegalStateException {
         checkIfShutdown();
         try (AutoCloseable ignored = stateMonitor.enter()) {
             return doScheduling(taskIterator, newLeases);
@@ -801,7 +803,8 @@ public class TaskScheduler {
             logger.error("Error with scheduling run: " + e.getMessage(), e);
             if (e instanceof IllegalStateException) {
                 throw (IllegalStateException) e;
-            } else {
+            }
+            else {
                 logger.warn("Unexpected exception: " + e.getMessage());
                 throw new IllegalStateException("Unexpected exception during scheduling run: " + e.getMessage(), e);
             }
@@ -820,16 +823,16 @@ public class TaskScheduler {
     }
 
     private SchedulingResult doScheduling(TaskIterator taskIterator,
-                                          List<VirtualMachineLease> newLeases) throws Exception {
+        List<VirtualMachineLease> newLeases) throws Exception {
         long start = System.currentTimeMillis();
         final SchedulingResult schedulingResult = doSchedule(taskIterator, newLeases);
         if ((lastVMPurgeAt + purgeVMsIntervalSecs * 1000) < System.currentTimeMillis()) {
             lastVMPurgeAt = System.currentTimeMillis();
             logger.debug("Purging inactive VMs");
             assignableVMs.purgeInactiveVMs( // explicitly exclude VMs that have assignments
-                    schedulingResult.getResultMap() == null ?
-                            Collections.emptySet() :
-                            new HashSet<>(schedulingResult.getResultMap().keySet())
+                schedulingResult.getResultMap() == null ?
+                    Collections.emptySet() :
+                    new HashSet<>(schedulingResult.getResultMap().keySet())
             );
         }
         schedulingResult.setRuntime(System.currentTimeMillis() - start);
@@ -837,8 +840,8 @@ public class TaskScheduler {
     }
 
     private SchedulingResult doSchedule(
-            TaskIterator taskIterator,
-            List<VirtualMachineLease> newLeases) throws Exception {
+        TaskIterator taskIterator,
+        List<VirtualMachineLease> newLeases) throws Exception {
         AtomicInteger rejectedCount = new AtomicInteger();
         List<AssignableVirtualMachine> originalVms = assignableVMs.prepareAndGetOrderedVMs(newLeases, rejectedCount);
         List<AssignableVirtualMachine> avms = assignableVMsEvaluator.call(originalVms);
@@ -864,7 +867,8 @@ public class TaskScheduler {
                 }
                 failedTasksForAutoScaler.add(taskOrFailure.getTask());
             }
-        } else {
+        }
+        else {
             schedulingEventListener.onScheduleStart();
             try {
                 while (true) {
@@ -880,16 +884,16 @@ public class TaskScheduler {
                     }
                     if (taskOrFailure.hasFailure()) {
                         schedulingResult.addFailures(
+                            taskOrFailure.getTask(),
+                            Collections.singletonList(new TaskAssignmentResult(
+                                assignableVMs.getDummyVM(),
                                 taskOrFailure.getTask(),
-                                Collections.singletonList(new TaskAssignmentResult(
-                                                assignableVMs.getDummyVM(),
-                                                taskOrFailure.getTask(),
-                                                false,
-                                                Collections.singletonList(taskOrFailure.getAssignmentFailure()),
-                                                null,
-                                                0
-                                        )
-                                ));
+                                false,
+                                Collections.singletonList(taskOrFailure.getAssignmentFailure()),
+                                null,
+                                0
+                            )
+                            ));
                         continue;
                     }
                     TaskRequest task = taskOrFailure.getTask();
@@ -904,7 +908,7 @@ public class TaskScheduler {
                         final AssignmentFailure resAllocsFailure = resAllocsEvaluator.hasResAllocs(task);
                         if (resAllocsFailure != null) {
                             final List<TaskAssignmentResult> failures = Collections.singletonList(new TaskAssignmentResult(assignableVMs.getDummyVM(),
-                                    task, false, Collections.singletonList(resAllocsFailure), null, 0.0));
+                                task, false, Collections.singletonList(resAllocsFailure), null, 0.0));
                             schedulingResult.addFailures(task, failures);
                             failedTasksForAutoScaler.remove(task); // don't scale up for resAllocs failures
                             if (logger.isDebugEnabled()) {
@@ -916,7 +920,7 @@ public class TaskScheduler {
                     final AssignmentFailure maxResourceFailure = assignableVMs.getFailedMaxResource(null, task);
                     if (maxResourceFailure != null) {
                         final List<TaskAssignmentResult> failures = Collections.singletonList(new TaskAssignmentResult(assignableVMs.getDummyVM(), task, false,
-                                Collections.singletonList(maxResourceFailure), null, 0.0));
+                            Collections.singletonList(maxResourceFailure), null, 0.0));
                         schedulingResult.addFailures(task, failures);
                         if (logger.isDebugEnabled()) {
                             logger.debug("Task {}: maxResource failure: {}", task.getId(), maxResourceFailure);
@@ -935,14 +939,15 @@ public class TaskScheduler {
                     }
                     List<EvalResult> results = new ArrayList<>();
                     List<TaskAssignmentResult> bestResults = new ArrayList<>();
-                    for (Future<EvalResult> f : futures) {
+                    for (Future<EvalResult> f: futures) {
                         try {
                             EvalResult evalResult = f.get();
                             if (evalResult.exception != null) {
                                 logger.warn("Error during concurrent task assignment eval - " + evalResult.exception.getMessage(),
-                                        evalResult.exception);
+                                    evalResult.exception);
                                 schedulingResult.addException(evalResult.exception);
-                            } else {
+                            }
+                            else {
                                 results.add(evalResult);
                                 bestResults.add(evalResult.result);
                                 if (logger.isDebugEnabled()) {
@@ -963,14 +968,15 @@ public class TaskScheduler {
                         if (logger.isDebugEnabled()) {
                             logger.debug("Task {}: no successful results", task.getId());
                         }
-                        for (EvalResult er : results) {
+                        for (EvalResult er: results) {
                             failures.addAll(er.assignmentResults);
                         }
                         schedulingResult.addFailures(task, failures);
-                    } else {
+                    }
+                    else {
                         if (logger.isDebugEnabled()) {
                             logger.debug("Task {}: found successful assignment on host {}", task.getId(),
-                                    successfulResult.getHostname());
+                                successfulResult.getHostname());
                         }
                         successfulResult.assignResult();
                         tasksIterationCount++;
@@ -985,23 +991,24 @@ public class TaskScheduler {
         List<VirtualMachineLease> idleResourcesList = new ArrayList<>();
         if (schedulingResult.getExceptions().isEmpty()) {
             List<VirtualMachineLease> expirableLeases = new ArrayList<>();
-            for (AssignableVirtualMachine avm : avms) {
+            for (AssignableVirtualMachine avm: avms) {
                 VMAssignmentResult assignmentResult = avm.resetAndGetSuccessfullyAssignedRequests();
                 if (assignmentResult == null) {
                     if (!avm.hasPreviouslyAssignedTasks()) {
                         idleResourcesList.add(avm.getCurrTotalLease());
                     }
                     expirableLeases.add(avm.getCurrTotalLease());
-                } else {
+                }
+                else {
                     resultMap.put(avm.getHostname(), assignmentResult);
                 }
             }
 
             // Process inactive VMs
             List<VirtualMachineLease> idleInactiveAVMs = inactiveAVMs.stream()
-                    .filter(vm -> vm.getCurrTotalLease() != null && !vm.hasPreviouslyAssignedTasks())
-                    .map(AssignableVirtualMachine::getCurrTotalLease)
-                    .collect(Collectors.toList());
+                .filter(vm -> vm.getCurrTotalLease() != null && !vm.hasPreviouslyAssignedTasks())
+                .map(AssignableVirtualMachine::getCurrTotalLease)
+                .collect(Collectors.toList());
 
             rejectedCount.addAndGet(assignableVMs.removeLimitedLeases(expirableLeases));
             if (autoScaler != null) {

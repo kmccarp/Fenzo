@@ -34,7 +34,7 @@ public class TaskCompleter {
     private final long delayMillis;
 
     public TaskCompleter(BlockingQueue<RandomTaskGenerator.GeneratedTask> taskInputQ,
-                         Action1<RandomTaskGenerator.GeneratedTask> taskCompleter, long delayMillis) {
+        Action1<RandomTaskGenerator.GeneratedTask> taskCompleter, long delayMillis) {
         sortedTaskSet = new TreeSet<>();
         this.taskInputQ = taskInputQ;
         this.taskCompleter = taskCompleter;
@@ -44,39 +44,39 @@ public class TaskCompleter {
     public void start() {
         final List<RandomTaskGenerator.GeneratedTask> newTasks = new ArrayList<>();
         new ScheduledThreadPoolExecutor(1).scheduleWithFixedDelay(
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            newTasks.clear();
-                            taskInputQ.drainTo(newTasks);
-                            if(!newTasks.isEmpty()) {
-                                for(RandomTaskGenerator.GeneratedTask t: newTasks)
-                                    sortedTaskSet.add(t);
-                            }
-                            if(sortedTaskSet.isEmpty())
-                                return;
-                            RandomTaskGenerator.GeneratedTask runningTask = sortedTaskSet.first();
-                            long now = System.currentTimeMillis();
+            new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        newTasks.clear();
+                        taskInputQ.drainTo(newTasks);
+                        if (!newTasks.isEmpty()) {
+                            for (RandomTaskGenerator.GeneratedTask t: newTasks)
+                                sortedTaskSet.add(t);
+                        }
+                        if (sortedTaskSet.isEmpty())
+                            return;
+                        RandomTaskGenerator.GeneratedTask runningTask = sortedTaskSet.first();
+                        long now = System.currentTimeMillis();
 //                            System.out.println("                                  Looking at next task to complete: now=" +
 //                                    now + ", task's completion is " + runningTask.getRunUntilMillis());
-                            if(runningTask.getRunUntilMillis()<=now) {
-                                Iterator<RandomTaskGenerator.GeneratedTask> iterator = sortedTaskSet.iterator();
-                                while(iterator.hasNext()) {
-                                    RandomTaskGenerator.GeneratedTask nextTask = iterator.next();
-                                    if(nextTask.getRunUntilMillis()>now)
-                                        return;
-                                    taskCompleter.call(nextTask);
-                                    iterator.remove();
-                                }
+                        if (runningTask.getRunUntilMillis() <= now) {
+                            Iterator<RandomTaskGenerator.GeneratedTask> iterator = sortedTaskSet.iterator();
+                            while (iterator.hasNext()) {
+                                RandomTaskGenerator.GeneratedTask nextTask = iterator.next();
+                                if (nextTask.getRunUntilMillis() > now)
+                                    return;
+                                taskCompleter.call(nextTask);
+                                iterator.remove();
                             }
                         }
-                        catch (Exception e) {
-                            e.printStackTrace();
-                        }
                     }
-                },
-                delayMillis, delayMillis, TimeUnit.MILLISECONDS
+                    catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            },
+            delayMillis, delayMillis, TimeUnit.MILLISECONDS
         );
     }
 }

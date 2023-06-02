@@ -45,10 +45,10 @@ public interface UsageTrackedQueue {
     class ResUsage {
         private final ResAllocs resAllocsWrapper;
 
-        private double cpus=0.0;
-        private double memory=0.0;
-        private double networkMbps=0.0;
-        private double disk=0.0;
+        private double cpus = 0.0;
+        private double memory = 0.0;
+        private double networkMbps = 0.0;
+        private double disk = 0.0;
 
         public ResUsage() {
             resAllocsWrapper = new ResAllocs() {
@@ -118,15 +118,15 @@ public interface UsageTrackedQueue {
             double max = tCPU > 0.0 ? cpus / tCPU : cpus;
 
             double tMemory = totalResources.getMemory();
-            double tmp = tMemory > 0.0? memory / tMemory : memory;
+            double tmp = tMemory > 0.0 ? memory / tMemory : memory;
             max = Math.max(max, tmp);
 
             double tNetwork = totalResources.getNetworkMbps();
-            tmp = tNetwork > 0.0? networkMbps / tNetwork : networkMbps;
+            tmp = tNetwork > 0.0 ? networkMbps / tNetwork : networkMbps;
             max = Math.max(max, tmp);
 
             double tDisk = totalResources.getDisk();
-            tmp = tDisk > 0.0? disk / tDisk : disk;
+            tmp = tDisk > 0.0 ? disk / tDisk : disk;
             max = Math.max(max, tmp);
 
             return max;

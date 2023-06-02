@@ -64,8 +64,8 @@ public interface ResAllocs {
      */
     default String getAsString() {
         return "{ cpu: " + getCores() +
-                ", memory: " + getMemory() +
-                ", disk: " + getDisk() +
-                ", networkMbps: " + getNetworkMbps() + " }";
+            ", memory: " + getMemory() +
+            ", disk: " + getDisk() +
+            ", networkMbps: " + getNetworkMbps() + " }";
     }
 }

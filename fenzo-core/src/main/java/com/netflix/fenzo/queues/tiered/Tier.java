@@ -71,7 +71,8 @@ class Tier implements UsageTrackedQueue {
         if (tierSla == null) {
             sortedBuckets.getSortedList().forEach(bucket -> bucket.setBucketGuarantees(null));
             tierResources = ResAllocsUtil.emptyOf(tierName);
-        } else {
+        }
+        else {
             sortedBuckets.getSortedList().forEach(bucket -> bucket.setBucketGuarantees(tierSla.getBucketAllocs(bucket.getName())));
 
             // Always create a bucket, if there is SLA defined for it for proper accounting
@@ -81,7 +82,7 @@ class Tier implements UsageTrackedQueue {
 
         this.effectiveUsedResources = ResAllocsUtil.emptyOf(tierName);
         this.lastEffectiveUsedResources.clear();
-        for (QueueBucket bucket : sortedBuckets.getSortedList()) {
+        for (QueueBucket bucket: sortedBuckets.getSortedList()) {
             effectiveUsedResources = ResAllocsUtil.add(effectiveUsedResources, bucket.getEffectiveUsage());
             lastEffectiveUsedResources.put(bucket.getName(), bucket.getEffectiveUsage());
         }
@@ -118,7 +119,7 @@ class Tier implements UsageTrackedQueue {
 
     @Override
     public Assignable<QueuableTask> nextTaskToLaunch() throws TaskQueueException {
-        for (QueueBucket bucket : sortedBuckets.getSortedList()) {
+        for (QueueBucket bucket: sortedBuckets.getSortedList()) {
             final Assignable<QueuableTask> taskOrFailure = bucket.nextTaskToLaunch();
             if (taskOrFailure != null) {
                 if (taskOrFailure.hasFailure()) {
@@ -132,9 +133,9 @@ class Tier implements UsageTrackedQueue {
                     return taskOrFailure;
                 }
                 return Assignable.error(task, new AssignmentFailure(VMResource.ResAllocs, 0, 0, 0,
-                        "No guaranteed capacity left for queue."
-                                + "\n" + bucket.getBucketCapacityAsString()
-                                + "\n" + getTierCapacityAsString()
+                    "No guaranteed capacity left for queue."
+                        + "\n" + bucket.getBucketCapacityAsString()
+                        + "\n" + getTierCapacityAsString()
                 ));
             }
         }
@@ -238,7 +239,8 @@ class Tier implements UsageTrackedQueue {
 
         if (tierResources == null) {
             remainingResources = null;
-        } else {
+        }
+        else {
             remainingResources = ResAllocsUtil.subtract(tierResources, effectiveUsedResources);
         }
     }
@@ -264,14 +266,14 @@ class Tier implements UsageTrackedQueue {
                 logger.error(e.getMessage());
             }
         }
-        for (QueueBucket bucket : sortedBuckets.getSortedList()) {
+        for (QueueBucket bucket: sortedBuckets.getSortedList()) {
             bucket.reset();
         }
     }
 
     private String getSortedListString() {
         StringBuilder b = new StringBuilder("Tier " + tierNumber + " sortedBs: [");
-        for (QueueBucket bucket : sortedBuckets.getSortedList()) {
+        for (QueueBucket bucket: sortedBuckets.getSortedList()) {
             b.append(bucket.getName()).append(" (").append(bucket.getDominantUsageShare()).append("), ");
         }
         b.append("]");
@@ -297,7 +299,7 @@ class Tier implements UsageTrackedQueue {
         if (totalResMapChanged(currTotalResourcesMap, totalResourcesMap)) {
             currTotalResourcesMap.clear();
             currTotalResourcesMap.putAll(totalResourcesMap);
-            for (QueueBucket b : sortedBuckets.getSortedList()) {
+            for (QueueBucket b: sortedBuckets.getSortedList()) {
                 b.setTotalResources(tierResources);
             }
             logger.debug("Re-sorting buckets in tier " + tierNumber + " after totals changed");
@@ -309,7 +311,7 @@ class Tier implements UsageTrackedQueue {
         if (currTotalResourcesMap.size() != totalResourcesMap.size())
             return true;
         Set<VMResource> curr = new HashSet<>(currTotalResourcesMap.keySet());
-        for (VMResource r : totalResourcesMap.keySet()) {
+        for (VMResource r: totalResourcesMap.keySet()) {
             final Double c = currTotalResourcesMap.get(r);
             final Double n = totalResourcesMap.get(r);
             if ((c == null && n != null) || (c != null && n == null) || (n != null && !n.equals(c)))
@@ -322,10 +324,10 @@ class Tier implements UsageTrackedQueue {
     @Override
     public Map<TaskQueue.TaskState, Collection<QueuableTask>> getAllTasks() throws TaskQueueException {
         Map<TaskQueue.TaskState, Collection<QueuableTask>> result = new HashMap<>();
-        for (QueueBucket bucket : sortedBuckets.getSortedList()) {
+        for (QueueBucket bucket: sortedBuckets.getSortedList()) {
             final Map<TaskQueue.TaskState, Collection<QueuableTask>> allTasks = bucket.getAllTasks();
             if (!allTasks.isEmpty()) {
-                for (TaskQueue.TaskState s : TaskQueue.TaskState.values()) {
+                for (TaskQueue.TaskState s: TaskQueue.TaskState.values()) {
                     final Collection<QueuableTask> q = allTasks.get(s);
                     if (q != null && !q.isEmpty()) {
                         Collection<QueuableTask> resQ = result.get(s);

@@ -178,7 +178,8 @@ public class TriggerOperator {
         Trigger trigger = getTrigger(triggerId);
         if (trigger != null) {
             disableTrigger(trigger);
-        } else {
+        }
+        else {
             throw new TriggerNotFoundException("No trigger found with trigger id: " + triggerId);
         }
     }
@@ -210,7 +211,8 @@ public class TriggerOperator {
         Trigger trigger = getTrigger(triggerId);
         if (trigger != null) {
             enableTrigger(trigger);
-        } else {
+        }
+        else {
             throw new TriggerNotFoundException("No trigger found with trigger id: " + triggerId);
         }
     }
@@ -242,7 +244,8 @@ public class TriggerOperator {
         Trigger trigger = getTrigger(triggerId);
         if (trigger != null) {
             deleteTrigger(triggerGroup, trigger);
-        } else {
+        }
+        else {
             throw new TriggerNotFoundException("No trigger found for trigger id: " + triggerId);
         }
     }
@@ -277,12 +280,12 @@ public class TriggerOperator {
         jobDataMap.put(TRIGGER_KEY, scheduledTrigger);
         try {
             org.quartz.Trigger quartzTrigger = newTrigger()
-                    .withIdentity(triggerKey(scheduledTrigger.getId(), Scheduler.DEFAULT_GROUP))
-                    .withSchedule(scheduledTrigger.getScheduleBuilder())
-                    .usingJobData(new JobDataMap(jobDataMap))
-                    .startAt(scheduledTrigger.getStartAt())
-                    .endAt(scheduledTrigger.getEndAt())
-                    .build();
+                .withIdentity(triggerKey(scheduledTrigger.getId(), Scheduler.DEFAULT_GROUP))
+                .withSchedule(scheduledTrigger.getScheduleBuilder())
+                .usingJobData(new JobDataMap(jobDataMap))
+                .startAt(scheduledTrigger.getStartAt())
+                .endAt(scheduledTrigger.getEndAt())
+                .build();
             scheduler.scheduleQuartzJob(scheduledTrigger.getId(), Scheduler.DEFAULT_GROUP, ScheduledTriggerJob.class, quartzTrigger);
             scheduledTrigger.setQuartzTrigger(quartzTrigger);
             logger.info("Successfully scheduled {}", scheduledTrigger);
@@ -377,7 +380,8 @@ public class TriggerOperator {
         Trigger trigger = getTrigger(triggerId);
         if (trigger != null) {
             execute(trigger);
-        } else {
+        }
+        else {
             throw new TriggerNotFoundException(String.format("No trigger found with id: %s", triggerId));
         }
     }

@@ -65,8 +65,8 @@ class VMCollection {
      * @return Collection of pseudo host names added.
      */
     Map<String, List<String>> clonePseudoVMsForGroups(Map<String, Integer> groupCounts,
-                                                      Func1<String, AutoScaleRule> ruleGetter,
-                                                      Predicate<VirtualMachineLease> vmFilter
+        Func1<String, AutoScaleRule> ruleGetter,
+        Predicate<VirtualMachineLease> vmFilter
     ) {
         if (groupCounts == null || groupCounts.isEmpty())
             return Collections.emptyMap();
@@ -79,9 +79,9 @@ class VMCollection {
             final ConcurrentMap<String, AssignableVirtualMachine> avmsMap = vms.get(g);
             if (avmsMap != null) {
                 final List<AssignableVirtualMachine> vmsList = avmsMap.values()
-                        .stream()
-                        .filter(avm -> vmFilter.test(avm.getCurrTotalLease()))
-                        .collect(Collectors.toList());
+                    .stream()
+                    .filter(avm -> vmFilter.test(avm.getCurrTotalLease()))
+                    .collect(Collectors.toList());
                 if (vmsList != null && !vmsList.isEmpty()) {
                     // NOTE: a shortcoming here is that the attributes of VMs across a group may not be homogeneous.
                     // By creating one lease object and cloning from it, we pick one combination of the attributes
@@ -91,16 +91,16 @@ class VMCollection {
                     // task constraints that depend on the variety of such attributes may fail the task placement.
                     // We will live with that limitation at this time.
                     VirtualMachineLease lease = vmCloner.getClonedMaxResourcesLease(vmsList);
-                    if(logger.isDebugEnabled()) {
+                    if (logger.isDebugEnabled()) {
                         logger.debug("Cloned lease cpu={}, mem={}, disk={}, network={}", lease.cpuCores(),
-                                lease.memoryMB(), lease.diskMB(), lease.networkMbps());
+                            lease.memoryMB(), lease.diskMB(), lease.networkMbps());
                         final Map<String, Protos.Attribute> attributeMap = lease.getAttributeMap();
                         if (attributeMap == null || attributeMap.isEmpty())
                             logger.debug("Cloned maxRes lease has empty attributeMap");
                         else
-                            for (Map.Entry<String, Protos.Attribute> entry : attributeMap.entrySet())
+                            for (Map.Entry<String, Protos.Attribute> entry: attributeMap.entrySet())
                                 logger.debug("Cloned maxRes lease attribute: " + entry.getKey() + ": " +
-                                        (entry.getValue() == null ? "null" : entry.getValue().getText().getValue())
+                                    (entry.getValue() == null ? "null" : entry.getValue().getText().getValue())
                                 );
                     }
                     int n = groupCounts.get(g);
@@ -113,7 +113,7 @@ class VMCollection {
                     for (int i = 0; i < n; i++) {
                         final String hostname = createHostname(g, i);
                         addLease(vmCloner.cloneLease(lease, hostname, now));
-                        if(logger.isDebugEnabled())
+                        if (logger.isDebugEnabled())
                             logger.debug("Added cloned lease for " + hostname);
                         hostnames.add(hostname);
                         // update total lease on the newly added VMs so they are available for use
@@ -145,12 +145,12 @@ class VMCollection {
 
     Optional<AssignableVirtualMachine> getVmByName(String name) {
         return vms.values().stream()
-                .flatMap(
-                        (Function<ConcurrentMap<String, AssignableVirtualMachine>, Stream<AssignableVirtualMachine>>) m
-                                -> m.values().stream()
-                )
-                .filter(avm -> name.equals(avm.getHostname()))
-                .findFirst();
+            .flatMap(
+                (Function<ConcurrentMap<String, AssignableVirtualMachine>, Stream<AssignableVirtualMachine>>) m
+                    -> m.values().stream()
+            )
+            .filter(avm -> name.equals(avm.getHostname()))
+            .findFirst();
     }
 
     AssignableVirtualMachine create(String host) {
@@ -164,7 +164,7 @@ class VMCollection {
             if (vms.get(defaultGroupName) != null)
                 prev = vms.get(defaultGroupName).remove(host);
         }
-        vms.get(group).putIfAbsent(host, prev == null? newVmCreator.call(host) : prev);
+        vms.get(group).putIfAbsent(host, prev == null ? newVmCreator.call(host) : prev);
         return vms.get(group).get(host);
     }
 
@@ -186,10 +186,10 @@ class VMCollection {
     }
 
     boolean addLease(VirtualMachineLease l) {
-        String group = l.getAttributeMap() == null? null :
-                l.getAttributeMap().get(groupingAttrName) == null?
-                        null :
-                        l.getAttributeMap().get(groupingAttrName).getText().getValue();
+        String group = l.getAttributeMap() == null ? null :
+            l.getAttributeMap().get(groupingAttrName) == null ?
+                null :
+                l.getAttributeMap().get(groupingAttrName).getText().getValue();
         if (group == null)
             group = defaultGroupName;
         final AssignableVirtualMachine avm = getOrCreate(l.hostname(), group);
@@ -203,7 +203,7 @@ class VMCollection {
 
     public int size(String group) {
         final ConcurrentMap<String, AssignableVirtualMachine> m = vms.get(group);
-        return m == null? 0 : m.size();
+        return m == null ? 0 : m.size();
     }
 
     public AssignableVirtualMachine remove(AssignableVirtualMachine avm) {

@@ -66,7 +66,7 @@ public class UniqueHostAttrConstraint implements ConstraintEvaluator {
     public UniqueHostAttrConstraint(Func1<String, Set<String>> coTasksGetter, String hostAttributeName) {
         this.coTasksGetter = coTasksGetter;
         this.hostAttributeName = hostAttributeName;
-        this.name = UniqueHostAttrConstraint.class.getName()+"-"+hostAttributeName;
+        this.name = UniqueHostAttrConstraint.class.getName() + "-" + hostAttributeName;
     }
 
     /**
@@ -97,20 +97,20 @@ public class UniqueHostAttrConstraint implements ConstraintEvaluator {
     public Result evaluate(TaskRequest taskRequest, VirtualMachineCurrentState targetVM, TaskTrackerState taskTrackerState) {
         Set<String> coTasks = coTasksGetter.call(taskRequest.getId());
         String targetHostAttrVal = AttributeUtilities.getAttrValue(targetVM.getCurrAvailableResources(), hostAttributeName);
-        if(targetHostAttrVal==null || targetHostAttrVal.isEmpty()) {
+        if (targetHostAttrVal == null || targetHostAttrVal.isEmpty()) {
             return new Result(false, hostAttributeName + " attribute unavailable on host " + targetVM.getCurrAvailableResources().hostname());
         }
-        for(String coTask: coTasks) {
+        for (String coTask: coTasks) {
             TaskTracker.ActiveTask activeTask = taskTrackerState.getAllRunningTasks().get(coTask);
-            if(activeTask==null)
+            if (activeTask == null)
                 activeTask = taskTrackerState.getAllCurrentlyAssignedTasks().get(coTask);
-            if(activeTask!=null) {
+            if (activeTask != null) {
                 String usedAttrVal = AttributeUtilities.getAttrValue(activeTask.getTotalLease(), hostAttributeName);
-                if(usedAttrVal==null || usedAttrVal.isEmpty())
-                    return new Result(false, hostAttributeName+" attribute unavailable on host " + activeTask.getTotalLease().hostname() +
-                            " running co-task " + coTask);
-                if(usedAttrVal.equals(targetHostAttrVal)) {
-                    return new Result(false, hostAttributeName+" " + targetHostAttrVal + " already used for another co-task " + coTask);
+                if (usedAttrVal == null || usedAttrVal.isEmpty())
+                    return new Result(false, hostAttributeName + " attribute unavailable on host " + activeTask.getTotalLease().hostname() +
+                        " running co-task " + coTask);
+                if (usedAttrVal.equals(targetHostAttrVal)) {
+                    return new Result(false, hostAttributeName + " " + targetHostAttrVal + " already used for another co-task " + coTask);
                 }
             }
         }

@@ -21,8 +21,8 @@ public class WeightedAverageFitnessCalculatorTest {
     public void testWeightsMustEqualOne() throws Exception {
         VMTaskFitnessCalculator fitnessCalculator = mock(VMTaskFitnessCalculator.class);
         List<WeightedFitnessCalculator> weightedFitnessCalculators = Arrays.asList(
-                new WeightedFitnessCalculator(fitnessCalculator, 0.3),
-                new WeightedFitnessCalculator(fitnessCalculator, 0.75)
+            new WeightedFitnessCalculator(fitnessCalculator, 0.3),
+            new WeightedFitnessCalculator(fitnessCalculator, 0.75)
         );
         new WeightedAverageFitnessCalculator(weightedFitnessCalculators);
     }
@@ -36,8 +36,8 @@ public class WeightedAverageFitnessCalculatorTest {
         when(fitnessCalculator2.calculateFitness(any(), any(), any())).thenReturn(1.0);
 
         List<WeightedFitnessCalculator> weightedFitnessCalculators = Arrays.asList(
-                new WeightedFitnessCalculator(fitnessCalculator1, 0.5),
-                new WeightedFitnessCalculator(fitnessCalculator2, 0.5)
+            new WeightedFitnessCalculator(fitnessCalculator1, 0.5),
+            new WeightedFitnessCalculator(fitnessCalculator2, 0.5)
         );
         WeightedAverageFitnessCalculator calculator = new WeightedAverageFitnessCalculator(weightedFitnessCalculators);
         double fitness = calculator.calculateFitness(mock(TaskRequest.class), mock(VirtualMachineCurrentState.class), mock(TaskTrackerState.class));
@@ -53,8 +53,8 @@ public class WeightedAverageFitnessCalculatorTest {
         when(fitnessCalculator2.calculateFitness(any(), any(), any())).thenReturn(1.0);
 
         List<WeightedFitnessCalculator> weightedFitnessCalculators = Arrays.asList(
-                new WeightedFitnessCalculator(fitnessCalculator1, 0.3),
-                new WeightedFitnessCalculator(fitnessCalculator2, 0.7)
+            new WeightedFitnessCalculator(fitnessCalculator1, 0.3),
+            new WeightedFitnessCalculator(fitnessCalculator2, 0.7)
         );
         WeightedAverageFitnessCalculator calculator = new WeightedAverageFitnessCalculator(weightedFitnessCalculators);
         double fitness = calculator.calculateFitness(mock(TaskRequest.class), mock(VirtualMachineCurrentState.class), mock(TaskTrackerState.class));

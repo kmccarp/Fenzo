@@ -25,7 +25,7 @@ class AutoScalerInput {
     private final Set<TaskRequest> failedTasks;
 
     AutoScalerInput(List<VirtualMachineLease> idleResources, List<VirtualMachineLease> idleInactiveResources, Set<TaskRequest> failedTasks) {
-        this.idleResourcesList= idleResources;
+        this.idleResourcesList = idleResources;
         this.idleInactiveResources = idleInactiveResources;
         this.failedTasks = failedTasks;
     }

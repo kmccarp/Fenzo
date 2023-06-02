@@ -35,10 +35,12 @@ public interface VirtualMachineLease {
     public static class Range {
         private final int beg;
         private final int end;
+
         public Range(int beg, int end) {
             this.beg = beg;
             this.end = end;
         }
+
         /**
          * Get the beginning value of the range.
          *
@@ -47,6 +49,7 @@ public interface VirtualMachineLease {
         public int getBeg() {
             return beg;
         }
+
         /**
          * Get the end value of the range.
          *
