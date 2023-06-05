@@ -17,7 +17,6 @@
 package com.netflix.fenzo;
 
 import com.netflix.fenzo.functions.Action1;
-import com.netflix.fenzo.functions.Func1;
 import com.netflix.fenzo.plugins.BinPackingFitnessCalculators;
 import org.junit.Assert;
 import org.apache.mesos.Protos;
@@ -61,27 +60,20 @@ public class ResourceSetsTests {
     private TaskScheduler getTaskSchedulerWithAutoscale(boolean useBinPacking, Action1<AutoScaleAction> callback, AutoScaleRule... rules) {
         final TaskScheduler.Builder builder = new TaskScheduler.Builder()
                 .withLeaseOfferExpirySecs(1000000)
-                .withLeaseRejectAction(new Action1<VirtualMachineLease>() {
-                    @Override
-                    public void call(VirtualMachineLease virtualMachineLease) {
-                        System.out.println("Rejecting offer on host " + virtualMachineLease.hostname());
-                    }
+                .withLeaseRejectAction(virtualMachineLease -> {
+                    System.out.println("Rejecting offer on host " + virtualMachineLease.hostname());
                 })
                 .withAutoScaleByAttributeName(hostAttrName)
-                .withFitnessGoodEnoughFunction(new Func1<Double, Boolean>() {
-                    @Override
-                    public Boolean call(Double aDouble) {
-                        return aDouble > 1.0;
-                    }
-                });
+                .withFitnessGoodEnoughFunction(aDouble -> aDouble > 1.0);
         if(callback!=null && rules!=null) {
             builder.withAutoScalerCallback(callback);
             for (AutoScaleRule r : rules)
                 builder.withAutoScaleRule(r);
         }
-        if(useBinPacking)
+        if (useBinPacking) {
             builder
-                    .withFitnessCalculator(BinPackingFitnessCalculators.cpuMemBinPacker);
+                .withFitnessCalculator(BinPackingFitnessCalculators.cpuMemBinPacker);
+        }
         return builder.build();
     }
 
@@ -255,10 +247,11 @@ public class ResourceSetsTests {
         tasks.add(TaskRequestProvider.getTaskRequest(
                 "grp", 0.1, 100, 0, 0, 0, null, null, Collections.singletonMap(sr2.getResName(), sr2)));
         // create 10 tasks asking for sr3
-        final int N=20; // #tasks for sr3
-        for(int i=0; i<N; i++)
+        final int n=20; // #tasks for sr3
+        for (int i = 0; i < n; i++) {
             tasks.add(TaskRequestProvider.getTaskRequest(
-                    "grp", 0.1, 100, 0, 0, 0, null, null, Collections.singletonMap(sr3.getResName(), sr3)));
+                "grp", 0.1, 100, 0, 0, 0, null, null, Collections.singletonMap(sr3.getResName(), sr3)));
+        }
         final TaskScheduler taskScheduler = getTaskScheduler();
         final SchedulingResult result = taskScheduler.scheduleOnce(tasks, leases);
         Assert.assertTrue(result.getResultMap().size() == 1);
@@ -267,16 +260,18 @@ public class ResourceSetsTests {
         final Map<String, Integer> counts = new HashMap<>();
         for(TaskAssignmentResult r: assignmentResult.getTasksAssigned()) {
             final String value = r.getRequest().getCustomNamedResources().get("ENIs").getResValue();
-            if(counts.get(value) == null)
+            if (counts.get(value) == null) {
                 counts.put(value, 1);
-            else
-                counts.put(value, counts.get(value)+1);
+            }
+            else {
+                counts.put(value, counts.get(value) + 1);
+            }
         }
         List<Integer> li = new ArrayList<>(counts.values());
         Collections.sort(li);
         Assert.assertEquals(1, (int) li.get(0));
         Assert.assertEquals(1, (int) li.get(1));
-        Assert.assertEquals(N, (int) li.get(2));
+        Assert.assertEquals(n, (int) li.get(2));
     }
 
     // Create a host with 3 resource sets, each with 2 sub-resources. Submit these types of jobs:
@@ -430,9 +425,10 @@ public class ResourceSetsTests {
                 "hostB", numCores, numCores*1000, ports, getResSetsAttributesMap("ENIs", numENIs, numIPsPerEni)));
         TaskRequest.NamedResourceSetRequest sr1 = new TaskRequest.NamedResourceSetRequest("ENIs", "sg1", 1, 2);
         List<TaskRequest> tasks = new ArrayList<>();
-        for(int i=0; i<4; i++)
+        for (int i = 0; i < 4; i++) {
             tasks.add(TaskRequestProvider.getTaskRequest(
-                    "grp", 0.1, 100, 0, 0, 0, null, null, Collections.singletonMap(sr1.getResName(), sr1)));
+                "grp", 0.1, 100, 0, 0, 0, null, null, Collections.singletonMap(sr1.getResName(), sr1)));
+        }
         final TaskScheduler taskScheduler = getTaskScheduler();
         final SchedulingResult result = taskScheduler.scheduleOnce(tasks, leases);
         Assert.assertEquals(2, result.getResultMap().size());
@@ -462,9 +458,10 @@ public class ResourceSetsTests {
         TaskRequest.NamedResourceSetRequest sr1 = new TaskRequest.NamedResourceSetRequest("ENIs", "sg1", 1, numIPsPerEni);
         TaskRequest.NamedResourceSetRequest sr2 = new TaskRequest.NamedResourceSetRequest("ENIs", "sg2", 1, numIPsPerEni);
         List<TaskRequest> tasks = new ArrayList<>();
-        for(int i=0; i<numENIs; i++)
+        for (int i = 0; i < numENIs; i++) {
             tasks.add(TaskRequestProvider.getTaskRequest(
-                    "grp", 0.1, 100, 0, 0, 0, null, null, Collections.singletonMap(sr1.getResName(), sr1)));
+                "grp", 0.1, 100, 0, 0, 0, null, null, Collections.singletonMap(sr1.getResName(), sr1)));
+        }
         final TaskScheduler taskScheduler = getTaskScheduler();
         SchedulingResult result = taskScheduler.scheduleOnce(tasks, leases);
         Assert.assertEquals(1, result.getResultMap().size());
@@ -507,18 +504,16 @@ public class ResourceSetsTests {
                 "hostB", numCores, numCores * 1000, ports, getResSetsAttributesMap("ENIs", numENIs, numIPsPerEni)));
         TaskRequest.NamedResourceSetRequest sr1 = new TaskRequest.NamedResourceSetRequest("ENIs", "sg1", 1, numIPsPerEni);
         List<TaskRequest> tasks = new ArrayList<>();
-        for(int i=0; i<numENIs; i++)
+        for (int i = 0; i < numENIs; i++) {
             tasks.add(TaskRequestProvider.getTaskRequest(
-                    "grp", 0.1, 100, 0, 0, 0, null, null, Collections.singletonMap(sr1.getResName(), sr1)));
+                "grp", 0.1, 100, 0, 0, 0, null, null, Collections.singletonMap(sr1.getResName(), sr1)));
+        }
         final int cooldown=2;
         final AtomicBoolean gotScaleupCallback = new AtomicBoolean(false);
         final TaskScheduler scheduler = getTaskSchedulerWithAutoscale(true,
-                new Action1<AutoScaleAction>() {
-                    @Override
-                    public void call(AutoScaleAction autoScaleAction) {
-                        gotScaleupCallback.set(true);
-                    }
-                },
+            autoScaleAction -> {
+                gotScaleupCallback.set(true);
+            },
                 AutoScaleRuleProvider.createRule(hostAttrVal1, 1, 1, cooldown, 0, 0));
         SchedulingResult result=null;
         boolean first=true;
@@ -648,9 +643,10 @@ public class ResourceSetsTests {
         leases.add(LeaseProvider.getLeaseOffer(
                 "hostA", numCores, numCores * 1000, ports, getResSetsAttributesMap("NewENIs", numENIs, numIPsPerEni)));
         tasks.clear();
-        for(int i=0; i<numENIs-1; i++)
+        for (int i = 0; i < numENIs - 1; i++) {
             tasks.add(TaskRequestProvider.getTaskRequest(
-                    "grp", 0.1, 100, 0, 0, 0, null, null, Collections.singletonMap(sr2.getResName(), sr2)));
+                "grp", 0.1, 100, 0, 0, 0, null, null, Collections.singletonMap(sr2.getResName(), sr2)));
+        }
         tasks.add(TaskRequestProvider.getTaskRequest(
                 "grp", 0.1, 100, 0, 0, 0, null, null, Collections.singletonMap(sr1.getResName(), sr1)));
         result = scheduler.scheduleOnce(tasks, leases);
