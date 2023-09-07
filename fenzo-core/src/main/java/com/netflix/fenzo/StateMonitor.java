@@ -29,13 +29,15 @@ class StateMonitor {
     }
 
     AutoCloseable enter() {
-        if(!lock.compareAndSet(false, true))
-            throw new IllegalStateException();
+      if (!lock.compareAndSet(false, true)) {
+        throw new IllegalStateException();
+      }
         return new AutoCloseable() {
             @Override
             public void close() throws Exception {
-                if(!lock.compareAndSet(true, false))
-                    throw new IllegalStateException();
+              if (!lock.compareAndSet(true, false)) {
+                throw new IllegalStateException();
+              }
             }
         };
     }
