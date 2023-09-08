@@ -80,8 +80,9 @@ public class OfferRejectionsTest {
                     }
                 }
         );
-        for(int i=0; i<3; i++)
-            offers.offer(LeaseProvider.getLeaseOffer("host" + i, 4, 4000, 1, 10));
+      for (int i = 0; i < 3; i++) {
+        offers.offer(LeaseProvider.getLeaseOffer("host" + i, 4, 4000, 1, 10));
+      }
         for(int i=0; i<offerExpirySecs+leaseReOfferDelaySecs+2; i++) {
             List<VirtualMachineLease> newOffers = new ArrayList<>();
             offers.drainTo(newOffers);
@@ -110,8 +111,9 @@ public class OfferRejectionsTest {
                     }
                 }
         );
-        for(int i=0; i<numHosts; i++)
-            offers.offer(LeaseProvider.getLeaseOffer("host" + i, 4, 4000, 1, 10));
+      for (int i = 0; i < numHosts; i++) {
+        offers.offer(LeaseProvider.getLeaseOffer("host" + i, 4, 4000, 1, 10));
+      }
         for(int i=0; i<2*(offerExpirySecs+leaseReOfferDelaySecs+2); i++) {
             List<VirtualMachineLease> newOffers = new ArrayList<>();
             offers.drainTo(newOffers);
@@ -157,9 +159,10 @@ public class OfferRejectionsTest {
         List<VirtualMachineLease> leases = new ArrayList<>();
         // add back offer with remaining resources on first host
         leases.add(consumedLease);
-        // add new offers from rest of the hosts
-        for(int i=1; i<numHosts; i++)
-            leases.add(LeaseProvider.getLeaseOffer("host" + i, 4, 4000, 1, 10));
+      // add new offers from rest of the hosts
+      for (int i = 1; i < numHosts; i++) {
+        leases.add(LeaseProvider.getLeaseOffer("host" + i, 4, 4000, 1, 10));
+      }
         for(int i=0; i<(offerExpirySecs+leaseReOfferDelaySecs); i++) {
             scheduler.scheduleOnce(Collections.<TaskRequest>emptyList(), leases);
             leases.clear();

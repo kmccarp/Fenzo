@@ -25,10 +25,10 @@ import java.util.Optional;
  */
 public interface ScaleDownConstraintEvaluator<CONTEXT> {
 
-    /**
-     * Evaluation result.
-     */
-    class Result<CONTEXT> {
+  /**
+   * Evaluation result.
+   */
+  final class Result<CONTEXT> {
         private final double score;
         private final Optional<CONTEXT> context;
 
